@@ -1,5 +1,6 @@
 import pymzml as mz
 import os.path
+import re
 
 #import os.path
 #import pandas as pd
@@ -30,4 +31,16 @@ class Mzml(object):
         """
         pass
 
+
+
+
+mzid_loc = "./test_mzml_1"
+perc_loc = "./test_perc_1"
+
+assert os.path.isdir(perc_loc)
+
+# List all files in the percolator directory ending with target.psms.txt
+perc_psms_file = [f for f in os.listdir(perc_loc) if f.endswith('target.psms.txt')]
+
+assert len(perc_psms_file) == 1, 'Check percolator output directory has 1 target.psms.txt'
 
