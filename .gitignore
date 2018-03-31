@@ -2,6 +2,7 @@
 .DS_Store
 test_mzml/
 test_percolator/
+.idea/
 
 
 # Byte-compiled / optimized / DLL files
