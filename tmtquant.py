@@ -1,7 +1,6 @@
 """
-TMT-quant v.0.1.0
-Reads in Crux/Percolator tab-delimited results (PSMS) and returns TMT values
-
+tmt-quant v.0.1.0
+reads in crux/percolator tab-delimited results (psms) and returns tmt values
 
 Molecular Proteomics Laboratory
 http://maggielab.org
@@ -15,6 +14,7 @@ import pandas as pd
 from time import time
 import xml
 
+
 def quant(args):
     """
     Reads in Crux/Percolator tab-delimited results (PSMS), open mzML files, and returns TMT values
@@ -22,14 +22,20 @@ def quant(args):
     Currently supports only Percolator, and MS2 quant.
     To-do features: TMT 6-plex, MS3 or multi-notch, read in mzID, etc.
 
-    Notes:
-    mzml_loc = './test_mzml_2'
-    id_loc = './test_perc_2'
-    precision = 20
-    qFilter = 0.05
-    uniqueOnly = True
+    Known issues:
+        pymzml does not appear to be able to parse certain ms2 spectra
 
-    :param args:    arguments from argaprse
+    Usage:
+        python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.01 -p 20 -u -v 2
+
+    Example value:
+        mzml_loc = './test_mzml_2'
+        id_loc = './test_perc_2'
+        precision = 20
+        qFilter = 0.05
+        uniqueOnly = True
+
+    :param args:    arguments from argparse
     :return:
     """
 
@@ -52,15 +58,16 @@ def quant(args):
 
     # Define the PPM of integration
     precision = args.precision
+    assert 1 <= precision <= 1000, '[error] precision must be 1 to 1000 ppm'
 
     # Define the Percolator Q value cutoff filter
-    qfilter = args.qvalue
+    q_filter = args.qvalue
 
     # Define the Percolator protein-unique PSM filter
-    uniqueonly = args.unique
+    unique_only = args.unique
 
-    assert os.path.isdir(mzml_loc), 'Percolator directory not valid.'
-    assert os.path.isdir(id_loc), 'Percolator directory not valid.'
+    assert os.path.isdir(mzml_loc), '[error] mzml directory not valid'
+    assert os.path.isdir(id_loc), '[error] percolator directory not valid'
 
     # List all files in the percolator directory ending with target.psms.txt.
     id_files = [f for f in os.listdir(id_loc) if f.endswith('target.psms.txt')]
@@ -85,15 +92,16 @@ def quant(args):
     mzml_files.sort()
 
     # Throw an error if there is no mzML file in the mzml directory
-    assert len(mzml_files) != 0, 'No mzML files in the specified directory.'
-    assert len(mzml_files) == max(file_indices) + 1, 'Number of files not matching.'
-
+    assert len(mzml_files) != 0, '[error] no mzML files in the specified directory.'
+    assert len(mzml_files) == max(file_indices) + 1, '[error] number of files not matching.'
 
 
     # For each file index (fraction), open the mzML file, and create a subset Percolator ID dataframe
     for idx in file_indices:
 
-        print('Doing mzML:', mzml_files[idx], '(' + str(idx + 1), 'of', str(len(file_indices)) + ')', sep= ' ')
+        # Verbosity 1 progress message
+        print('[verbosity 1] doing mzML:', mzml_files[idx],
+              '(' + str(idx + 1), 'of', str(len(file_indices)) + ')', sep=' ')
 
         # Make a subset dataframe with the current file index (fraction) being considered
         fraction_id_df = id_df[id_df['file_idx'] == idx]
@@ -111,44 +119,44 @@ def quant(args):
         # Loop through each qualifying row in sub_df_filtered
         for i in range(len(fraction_id_df)):
 
-            # If this is a qualifying PSM, pull the spectrum based on the scan number
+            # Get current scan number
             scan = fraction_id_df.loc[i, 'scan']
 
-            # Verbosity 1 progress message
-            if (i+1) % 100 == 0 and args.verbosity > 0:
-                print('verbosity 1: doing mzML:', mzml_files[idx], '(' + str(idx + 1),
+            # Verbosity 1 progress message (display progress every 1000 rows)
+            if (i+1) % 1000 == 0 and args.verbosity > 0:
+                print('[verbosity 1] doing mzML:', mzml_files[idx], '(' + str(idx + 1),
                       'of', str(len(file_indices)) + ');', 'PSM:', i+1, 'of', len(fraction_id_df),
                       '(scan number:', str(scan) + ')', sep=' ')
 
-            # Verbosity 2 progress message
-            if (i + 1) % 100 == 0 and args.verbosity == 2:
+            # Verbosity 2 progress message (calculates time remaining)
+            if (i + 1) % 1000 == 0 and args.verbosity == 2:
                 t2 = time()
                 avg_time = (t2 - t1) / (i + 1)
                 eta = ((len(fraction_id_df) - i) * avg_time) / 60
 
-                print('verbosity 2: elapsed:', round((t2 - t1) / 60, 2), 'minutes.',
-                      'estimated remaining time for fraction:', eta, 'minutes.', sep=' ')
+                print('[verbosity 2] elapsed:', round((t2 - t1) / 60, 2), 'minutes.',
+                      'estimated remaining time for current fraction:', round(eta, 2), 'minutes.', sep=' ')
 
             # If q-value filter is on, skip any row that fails the filter.
-            if fraction_id_df.loc[i, 'percolator q-value'] > qfilter:
+            if fraction_id_df.loc[i, 'percolator q-value'] > q_filter:
                 continue
 
             # If the protein-unique PSM filter is on, skip any row that fails the filter.
-            if uniqueonly and len(fraction_id_df.loc[i, 'protein id'].split(',')) > 1:
+            if unique_only and len(fraction_id_df.loc[i, 'protein id'].split(',')) > 1:
                 continue
 
-            # Get the spectrum in the mzML file by scan number
+            # If this is a qualifying row, get the spectrum in the mzML file by scan number
             try:
                 spectrum = fraction_mzml[scan]
 
             except KeyError:
-                print('Spectrum index out of bound.')
+                print('[error] spectrum index out of bound.')
 
             except xml.etree.ElementTree.ParseError:
-                print('XML eTree does not appear to be able to read this spectrum')
+                print('[warning] XML eTree does not appear to be able to read this spectrum')
                 continue
 
-            assert spectrum['ms level'] > 1, 'Spectrum is not MSn.'
+            assert spectrum['ms level'] > 1, '[error] spectrum is not MSn.'
 
             # For each reporter, check that the spectrum has that peak using pymzml
             # This returns a m/z and intensity tuple
@@ -156,11 +164,11 @@ def quant(args):
             tmt_intensities = [idx, scan]
 
             for reporter in reporters:
-                matchList = spectrum.has_peak(reporter)
+                match_list = spectrum.has_peak(reporter)
 
-                if matchList and len(matchList) == 1:
-                    for mz, I in matchList:
-                        tmt_intensities.append(I)
+                if match_list and len(match_list) == 1:
+                    for mz, intensity in match_list:
+                        tmt_intensities.append(intensity)
                 else:
                     tmt_intensities.append(0)
 
@@ -185,19 +193,20 @@ def quant(args):
     os.makedirs(args.out, exist_ok=True)
     save_path = os.path.join(args.out, 'tmt_out.txt')
 
-    final_df.to_csv(save_path, sep='\t'))
+    final_df.to_csv(save_path, sep='\t')
 
     return sys.exit(os.EX_OK)
 
 
 """
-Argparse code for running main function with parsed arguments from command line
+argparse code for running main function with parsed arguments from command line
+
 """
 if __name__ == '__main__':
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='TMT-quant returns TMT quantification'
+    parser = argparse.ArgumentParser(description='tmt-quant returns tmt quantification'
                                                  'values from Percolator output')
 
     parser.add_argument('mzml', help='path to folder containing mzml files')
@@ -238,4 +247,3 @@ if __name__ == '__main__':
 
     # Run the function in the argument
     args.func(args)
-
