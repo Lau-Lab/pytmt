@@ -17,12 +17,21 @@ import xml
 
 def quant(args):
     """
-    Reads in Crux/Percolator tab-delimited results (PSMS), open mzML files, and returns TMT values
+    Main function. This reads in Crux/Percolator tab-delimited results (PSMS) \\
+     and filter each row by protein-uniqueness and by Percolator q values \\
+     then it opens the corresponding mzML file of the fraction and finds the scan \\
+     and returns the intensity of each of the TMT reporter peaks within the specified \\
+     mass tolerance. Currently supports only Percolator, and MS2-level quantification.
 
-    Currently supports only Percolator, and MS2 quant.
-    To-do features: TMT 6-plex, MS3 or multi-notch, read in mzID, etc.
+    To-do features:
+        tmt 6-plex and other reporters
+        ms3 or multi-notch (shifting scan numbers)
+        read in mzID files rather than percolator
+        normalization and isotope purity adjustment
+        filtering based on ms1
 
     Known issues:
+        uses only directory indexing for finding mzml files
         pymzml does not appear to be able to parse certain ms2 spectra
 
     Usage:
@@ -32,11 +41,11 @@ def quant(args):
         mzml_loc = './test_mzml_2'
         id_loc = './test_perc_2'
         precision = 20
-        qFilter = 0.05
-        uniqueOnly = True
+        q_filter = 0.05
+        unique_only = True
 
     :param args:    arguments from argparse
-    :return:
+    :return:        Exit OK
     """
 
     # Folders of mzML files and the Percolator results.
