@@ -17,11 +17,15 @@ import xml
 
 def quant(args):
     """
-    Main function. This reads in Crux/Percolator tab-delimited results (PSMS) \\
-     and filter each row by protein-uniqueness and by Percolator q values \\
+    Main and only function. This reads in Percolator tab-delimited results (PSMS) \\
+     and filter each row by protein-uniqueness and by Percolator q value \\
      then it opens the corresponding mzML file of the fraction and finds the scan \\
-     and returns the intensity of each of the TMT reporter peaks within the specified \\
+     and returns the intensity of each TMT reporter within specified \\
      mass tolerance. Currently supports only Percolator, and MS2-level quantification.
+
+    Tested on:
+        standalone comet 2017.01rev4 > crux 3.1 percolator
+        crux 3.1 tide > crux 3.1 percolator
 
     To-do features:
         tmt 6-plex and other reporters
@@ -31,16 +35,21 @@ def quant(args):
         filtering based on ms1
 
     Known issues:
-        uses only directory indexing for finding mzml files
-        pymzml does not appear to be able to parse certain ms2 spectra
+        uses only directory index to match mzml files because of percolator
+        pymzml cannot parse certain (< 0.5%) ms2 spectra in test_mzml_2
+
+    Potential issues:
+        currently max of intensities is returned if multiple peaks are within the tolerance of reporter \\
+        (alternative would be to return sum intensity of all peaks, or return \\
+        the peak closest to the reporter, or drop the reporter altogether and return 0)
 
     Usage:
         python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.01 -p 20 -u -v 2
 
-    Example value:
+    Example values for arguments:
         mzml_loc = './test_mzml_2'
         id_loc = './test_perc_2'
-        precision = 20
+        precision = 15
         q_filter = 0.05
         unique_only = True
 
@@ -52,7 +61,7 @@ def quant(args):
     mzml_loc = args.mzml
     id_loc = args.id
 
-    # Define the reporter ion m/z values. Support TMT-10plex for now.
+    # Define the reporter ion m/z values. Support TMT 10-plex for now.
     reporters = [126.127726,
                  127.124761,
                  127.131081,
@@ -101,15 +110,14 @@ def quant(args):
     mzml_files.sort()
 
     # Throw an error if there is no mzML file in the mzml directory
-    assert len(mzml_files) != 0, '[error] no mzML files in the specified directory.'
-    assert len(mzml_files) == max(file_indices) + 1, '[error] number of files not matching.'
-
+    assert len(mzml_files) != 0, '[error] no mzml files in the specified directory'
+    assert len(mzml_files) == max(file_indices) + 1, '[error] number of mzml files not matching id list'
 
     # For each file index (fraction), open the mzML file, and create a subset Percolator ID dataframe
     for idx in file_indices:
 
-        # Verbosity 1 progress message
-        print('[verbosity 1] doing mzML:', mzml_files[idx],
+        # Verbosity 0 progress message
+        print('[verbosity 0] doing mzml:', mzml_files[idx],
               '(' + str(idx + 1), 'of', str(len(file_indices)) + ')', sep=' ')
 
         # Make a subset dataframe with the current file index (fraction) being considered
@@ -120,7 +128,8 @@ def quant(args):
 
         # Open the mzML file
         fraction_mzml = pymzml.run.Reader(path=os.path.join(mzml_loc, mzml_files[idx]),
-                                      MS1_Precision=precision*1e-6, MSn_Precision=precision*1e-6)
+                                          MS1_Precision=precision*1e-6,
+                                          MSn_Precision=precision*1e-6)
 
         # Time counter at the start of the run
         t1 = time()
@@ -133,7 +142,7 @@ def quant(args):
 
             # Verbosity 1 progress message (display progress every 1000 rows)
             if (i+1) % 1000 == 0 and args.verbosity > 0:
-                print('[verbosity 1] doing mzML:', mzml_files[idx], '(' + str(idx + 1),
+                print('[verbosity 1] doing mzml:', mzml_files[idx], '(' + str(idx + 1),
                       'of', str(len(file_indices)) + ');', 'PSM:', i+1, 'of', len(fraction_id_df),
                       '(scan number:', str(scan) + ')', sep=' ')
 
@@ -159,25 +168,31 @@ def quant(args):
                 spectrum = fraction_mzml[scan]
 
             except KeyError:
-                print('[error] spectrum index out of bound.')
+                print('[error] spectrum index out of bound')
 
             except xml.etree.ElementTree.ParseError:
                 print('[warning] XML eTree does not appear to be able to read this spectrum')
                 continue
 
-            assert spectrum['ms level'] > 1, '[error] spectrum is not MSn.'
+            assert spectrum['ms level'] > 1, '[error] specified spectrum is a full scan'
 
             # For each reporter, check that the spectrum has that peak using pymzml
-            # This returns a m/z and intensity tuple
+            # This returns a (m/z, intensity) tuple
             # We will append the intensity of each reporter to a list
             tmt_intensities = [idx, scan]
 
             for reporter in reporters:
                 match_list = spectrum.has_peak(reporter)
 
-                if match_list and len(match_list) == 1:
-                    for mz, intensity in match_list:
-                        tmt_intensities.append(intensity)
+                # If one or more peaks are matched, sum their intensities
+                if match_list and len(match_list) >= 1:
+                    tmt_intensities.append(max([intensity for (mz, intensity) in match_list]))
+
+                    # Print a warning if multiple peaks matched
+                    if len(match_list) > 1:
+                        print('[verbose 2] multiple peaks matched for reporter', reporter,
+                              'in scan:', scan)
+
                 else:
                     tmt_intensities.append(0)
 
@@ -225,7 +240,7 @@ if __name__ == '__main__':
     parser.add_argument('-u', '--unique', action='store_true', help='quantify unique peptides only')
 
     parser.add_argument('-q', '--qvalue',
-                        help='quantify peptides with q value below this threshold [default: 1]',
+                        help='quantify peptides with q value below this threshold [default: 1.0]',
                         type=float,
                         default=1.0)
 
@@ -238,7 +253,7 @@ if __name__ == '__main__':
                         default='tmt_out')
 
     parser.add_argument('-v', '--verbosity',
-                        help='verbosity of error messages. 0=quiet, 1=default, 2=verbose [default: 1]',
+                        help='verbosity of error messages. 0=quiet, 1=normal, 2=verbose [default: 1]',
                         type=int,
                         choices=[0, 1, 2],
                         default=1)
