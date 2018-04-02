@@ -44,13 +44,13 @@ def quant(args):
         the peak closest to the reporter, or drop the reporter altogether and return 0)
 
     Usage:
-        python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.01 -p 20 -u -v 2
+        python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.1 -p 10 -u -v 2 -o pq_test
 
     Example values for arguments:
         mzml_loc = './test_mzml_2'
         id_loc = './test_perc_2'
-        precision = 15
-        q_filter = 0.05
+        precision = 10
+        q_filter = 0.1
         unique_only = True
 
     :param args:    arguments from argparse
@@ -76,7 +76,7 @@ def quant(args):
 
     # Define the PPM of integration
     precision = args.precision
-    assert 1 <= precision <= 1000, '[error] precision must be 1 to 1000 ppm'
+    assert 1 <= precision <= 1000, '[error] mass tolerance must be between 1 and 1000 ppm'
 
     # Define the Percolator Q value cutoff filter
     q_filter = args.qvalue
@@ -245,9 +245,9 @@ if __name__ == '__main__':
                         default=1.0)
 
     parser.add_argument('-p', '--precision',
-                        help='ms2 spectrum mass shift tolerance in ppm [default: 20]',
+                        help='ms2 spectrum mass shift tolerance in ppm [default: 10]',
                         type=int,
-                        default=20)
+                        default=10)
 
     parser.add_argument('-o', '--out', help='name of the output directory [default: tmt_out]',
                         default='tmt_out')
