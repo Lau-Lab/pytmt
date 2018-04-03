@@ -171,7 +171,8 @@ def quant(args):
                 print('[error] spectrum index out of bound')
 
             except xml.etree.ElementTree.ParseError:
-                print('[warning] XML eTree does not appear to be able to read this spectrum')
+                print('[warning] XML eTree does not appear to be able to read this spectrum',
+                      '(scan number:', str(scan) + ')', sep=' ')
                 continue
 
             assert spectrum['ms level'] > 1, '[error] specified spectrum is a full scan'
@@ -190,7 +191,7 @@ def quant(args):
 
                     # Print a warning if multiple peaks matched
                     if len(match_list) > 1:
-                        print('[verbose 2] multiple peaks matched for reporter', reporter,
+                        print('[verbosity 2] multiple peaks matched for reporter', reporter,
                               'in scan:', scan)
 
                 else:
