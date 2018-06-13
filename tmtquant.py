@@ -218,6 +218,7 @@ def quant(args):
     os.makedirs(args.out, exist_ok=True)
     save_path = os.path.join(args.out, 'tmt_out.txt')
 
+    # Save the file
     final_df.to_csv(save_path, sep='\t')
 
     return sys.exit(os.EX_OK)
