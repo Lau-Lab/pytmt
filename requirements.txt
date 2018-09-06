@@ -6,7 +6,7 @@ ipython-genutils==0.2.0
 jsonschema==2.6.0
 jupyter-core==4.4.0
 nbformat==4.4.0
-numpy==1.14.2
+numpy==1.15.1
 pandas==0.22.0
 plotly==2.5.1
 pymzml==2.0.2
