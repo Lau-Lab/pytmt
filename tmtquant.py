@@ -1,5 +1,5 @@
 """
-tmt-quant v.0.1.0
+tmt-quant v.0.1.1
 reads in crux/percolator tab-delimited results (psms) and returns tmt values
 
 Molecular Proteomics Laboratory
@@ -13,6 +13,7 @@ import re
 import pandas as pd
 from time import time
 import xml
+import tqdm
 
 
 def quant(args):
@@ -131,15 +132,16 @@ def quant(args):
                                           MS1_Precision=precision*1e-6,
                                           MSn_Precision=precision*1e-6)
 
-        # Time counter at the start of the run
-        t1 = time()
+        # Time counter at the start of the run (now using tqdm for progress bar)
+        # t1 = time()
 
         # Loop through each qualifying row in sub_df_filtered
-        for i in range(len(fraction_id_df)):
+        for i in tqdm.trange(len(fraction_id_df)):
 
             # Get current scan number
             scan = fraction_id_df.loc[i, 'scan']
 
+            '''
             # Verbosity 1 progress message (display progress every 1000 rows)
             if (i+1) % 1000 == 0 and args.verbosity > 0:
                 print('[verbosity 1] doing mzml:', mzml_files[idx], '(' + str(idx + 1),
@@ -154,6 +156,8 @@ def quant(args):
 
                 print('[verbosity 2] elapsed:', round((t2 - t1) / 60, 2), 'minutes.',
                       'estimated remaining time for current fraction:', round(eta, 2), 'minutes.', sep=' ')
+                      
+            '''
 
             # If q-value filter is on, skip any row that fails the filter.
             if fraction_id_df.loc[i, 'percolator q-value'] > q_filter:
@@ -171,8 +175,9 @@ def quant(args):
                 print('[error] spectrum index out of bound')
 
             except xml.etree.ElementTree.ParseError:
-                print('[warning] XML eTree does not appear to be able to read this spectrum',
-                      '(scan number:', str(scan) + ')', sep=' ')
+                if args.verbosity == 2:
+                    print('[verbosity 2] XML eTree does not appear to be able to read this spectrum',
+                          '(scan number:', str(scan) + ')', sep=' ')
                 continue
 
             assert spectrum['ms level'] > 1, '[error] specified spectrum is a full scan'
@@ -185,13 +190,13 @@ def quant(args):
             for reporter in reporters:
                 match_list = spectrum.has_peak(reporter)
 
-                # If one or more peaks are matched, sum their intensities
+                # If one or more peaks are matched, get the higher of their intensities
                 if match_list and len(match_list) >= 1:
                     tmt_intensities.append(max([intensity for (mz, intensity) in match_list]))
 
                     # Print a warning if multiple peaks matched
-                    if len(match_list) > 1:
-                        print('[verbosity 2] multiple peaks matched for reporter', reporter,
+                    if len(match_list) > 1 and args.verbosity > 0:
+                        print('[verbosity 1] multiple peaks matched for reporter', reporter,
                               'in scan:', scan)
 
                 else:
@@ -200,6 +205,7 @@ def quant(args):
             # Grow the results into an output list of lists (creating if does not exist)
             try:
                 output_list.append(tmt_intensities)
+
             except NameError:
                 output_list = [tmt_intensities]
 
