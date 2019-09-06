@@ -1,6 +1,6 @@
 """
 tmt-quant v.0.2.0
-reads in crux/percolator tab-delimited results (psms) and returns tmt values
+Reads in crux/percolator tab-delimited results (psms) and returns tmt values
 
 Molecular Proteomics Laboratory
 http://maggielab.org
@@ -9,7 +9,6 @@ http://maggielab.org
 
 __version_info__ = ('0', '2', '0')
 __version__ = '.'.join(__version_info__)
-
 
 import pymzml as mz
 import os.path
@@ -123,18 +122,72 @@ def quant(args):
     mzml_loc = args.mzml
     id_loc = args.id
 
-    # Define the reporter ion m/z values. Support TMT 10-plex for now.
-    reporters = [126.127726,
-                 127.124761,
-                 127.131081,
-                 128.128116,
-                 128.134436,
-                 129.131471,
-                 129.137790,
-                 130.134825,
-                 130.141145,
-                 131.138180
-                 ]
+    assert args.multiplex in [0, 2, 6, 10, 11, 16], '[error] TMT multiplexity not 0, 2, 6, 10, 11 or 16'
+
+    # Define the reporter ion m/z values. Support TMT 0, 2, 6, 10, 11, 16-plex for now.
+    if args.multiplex == 10:
+        reporters = [126.127726,
+                     127.124761,
+                     127.131081,
+                     128.128116,
+                     128.134436,
+                     129.131471,
+                     129.137790,
+                     130.134825,
+                     130.141145,
+                     131.138180,
+                     ]
+
+    elif args.multiplex == 11:
+        reporters = [126.127726,
+                     127.124761,
+                     127.131081,
+                     128.128116,
+                     128.134436,
+                     129.131471,
+                     129.137790,
+                     130.134825,
+                     130.141145,
+                     131.138180,
+                     131.144499,
+                     ]
+
+    elif args.multiplex == 16:
+        reporters = [126.127726,
+                     127.124761,
+                     127.131081,
+                     128.128116,
+                     128.134436,
+                     129.131471,
+                     129.137790,
+                     130.134825,
+                     130.141145,
+                     131.138180,
+                     131.144499,
+                     132.141535,
+                     132.147855,
+                     133.144890,
+                     133.141210,
+                     134.148245,
+                     ]
+
+    elif args.multiplex == 0:
+        reporters = [126.127726,
+                     ]
+
+    elif args.multiplex == 2:
+        reporters = [126.127726,
+                     127.131081,
+                     ]
+
+    elif args.multiplex == 6:
+        reporters = [126.127726,
+                     127.131081,
+                     128.134436,
+                     129.131471,
+                     130.141145,
+                     131.138180,
+                     ]
 
     # Define the PPM of integration
     precision = args.precision
@@ -302,6 +355,11 @@ if __name__ == '__main__':
                         help='quantify peptides with q value below this threshold [default: 1.0]',
                         type=float,
                         default=1.0)
+
+    parser.add_argument('-m', '--multiplex',
+                        help='TMT-plex (0, 2, 6, 10, 11, 16) [default:10]',
+                        type=int,
+                        default=10)
 
     parser.add_argument('-p', '--precision',
                         help='ms2 spectrum mass shift tolerance in ppm [default: 10]',
