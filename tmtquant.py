@@ -1,5 +1,5 @@
 """
-tmt-quant v.0.1.1
+tmt-quant v.0.2.0
 reads in crux/percolator tab-delimited results (psms) and returns tmt values
 
 Molecular Proteomics Laboratory
@@ -7,13 +7,74 @@ http://maggielab.org
 
 """
 
-import pymzml
+__version_info__ = ('0', '2', '0')
+__version__ = '.'.join(__version_info__)
+
+
+import pymzml as mz
 import os.path
 import re
 import pandas as pd
-#from time import time
-import xml
 import tqdm
+
+
+class Mzml(object):
+
+    def __init__(
+            self,
+            path,
+            precision
+    ):
+        """
+        This class reads mzml files using pymzml
+
+        :param path: path of the mzml file to be loaded, e.g., "~/Desktop/example.mzml"
+        :param precision: integer determines precision of reading as well as mass tolerance of peak integration (ppm)
+        """
+
+        self.path = path
+        self.msdata = {}
+        self.rt_idx = {}
+        self.mslvl_idx = {}
+        self.precision = precision
+
+    def parse_mzml_ms2(self):
+        """
+        Read the mzml file and create data dictionary for all ms2 peaks
+        :return:
+        """
+
+        #
+        run = mz.run.Reader(self.path,
+                            MS_precision={
+                                1: self.precision*1e-6,
+                                2: self.precision*1e-6
+                            })
+
+        for n, spec in enumerate(run):
+
+            #if n % 1000 == 0:
+            #    print(
+            #        'Loading spectrum {0} at retention time {scan_time:1.2f}'.format(
+            #           spec.ID,
+            #            scan_time=spec.scan_time
+            #        )
+            #   )
+
+            self.mslvl_idx[n + 1] = spec.ms_level
+            self.rt_idx[n + 1] = spec.scan_time
+
+            if spec.ms_level == 2:
+                self.msdata[n + 1] = spec.peaks("centroided")
+
+        print(
+            'Parsed {0} spectra from file {1}'.format(
+                n + 1,
+                self.path)
+            )
+
+        return True
+
 
 
 def quant(args):
@@ -45,7 +106,7 @@ def quant(args):
         the peak closest to the reporter, or drop the reporter altogether and return 0)
 
     Usage:
-        python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.1 -p 10 -u -v 2 -o pq_test
+        python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.1 -p 20 -u -o pq_test
 
     Example values for arguments:
         mzml_loc = './test_mzml_2'
@@ -118,7 +179,7 @@ def quant(args):
     for idx in file_indices:
 
         # Verbosity 0 progress message
-        print('[verbosity 0] doing mzml:', mzml_files[idx],
+        print('Reading mzml file:', mzml_files[idx],
               '(' + str(idx + 1), 'of', str(len(file_indices)) + ')', sep=' ')
 
         # Make a subset dataframe with the current file index (fraction) being considered
@@ -128,12 +189,10 @@ def quant(args):
         fraction_id_df = fraction_id_df.sort_values(by='scan').reset_index(drop=True)
 
         # Open the mzML file
-        fraction_mzml = pymzml.run.Reader(path=os.path.join(mzml_loc, mzml_files[idx]),
-                                          MS1_Precision=precision*1e-6,
-                                          MSn_Precision=precision*1e-6)
+        fraction_mzml = Mzml(path=os.path.join(mzml_loc, mzml_files[idx]),
+                             precision=precision)
+        fraction_mzml.parse_mzml_ms2()
 
-        # Time counter at the start of the run (now using tqdm for progress bar)
-        # t1 = time()
 
         # Loop through each qualifying row in sub_df_filtered
         for i in tqdm.trange(len(fraction_id_df)):
@@ -169,18 +228,18 @@ def quant(args):
 
             # If this is a qualifying row, get the spectrum in the mzML file by scan number
             try:
-                spectrum = fraction_mzml[scan]
+                spectrum = fraction_mzml.msdata.get(scan)
 
             except KeyError:
                 print('[error] spectrum index out of bound')
 
-            except xml.etree.ElementTree.ParseError:
-                if args.verbosity == 2:
-                    print('[verbosity 2] XML eTree does not appear to be able to read this spectrum',
-                          '(scan number:', str(scan) + ')', sep=' ')
-                continue
+            #except xml.etree.ElementTree.ParseError:
+            #    if args.verbosity == 2:
+            #        print('[verbosity 2] XML eTree does not appear to be able to read this spectrum',
+            #              '(scan number:', str(scan) + ')', sep=' ')
+            #    continue
 
-            assert spectrum['ms level'] > 1, '[error] specified spectrum is a full scan'
+            #assert spectrum['ms level'] > 1, '[error] specified spectrum is a full scan'
 
             # For each reporter, check that the spectrum has that peak using pymzml
             # This returns a (m/z, intensity) tuple
@@ -188,19 +247,11 @@ def quant(args):
             tmt_intensities = [idx, scan]
 
             for reporter in reporters:
-                match_list = spectrum.has_peak(reporter)
 
-                # If one or more peaks are matched, get the higher of their intensities
-                if match_list and len(match_list) >= 1:
-                    tmt_intensities.append(max([intensity for (mz, intensity) in match_list]))
+                upper = reporter + reporter*(precision/2)*1e-6
+                lower = reporter - reporter*(precision/2)*1e-6
 
-                    # Print a warning if multiple peaks matched
-                    if len(match_list) > 1 and args.verbosity > 0:
-                        print('[verbosity 1] multiple peaks matched for reporter', reporter,
-                              'in scan:', scan)
-
-                else:
-                    tmt_intensities.append(0)
+                tmt_intensities.append(sum([I for mz_value, I in spectrum if upper > mz_value > lower]))
 
             # Grow the results into an output list of lists (creating if does not exist)
             try:
@@ -260,13 +311,17 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--out', help='name of the output directory [default: tmt_out]',
                         default='tmt_out')
 
-    parser.add_argument('-v', '--verbosity',
-                        help='verbosity of error messages. 0=quiet, 1=normal, 2=verbose [default: 1]',
-                        type=int,
-                        choices=[0, 1, 2],
-                        default=1)
+    #parser.add_argument('-vb', '--verbosity',
+    #                    help='verbosity of error messages. 0=quiet, 1=normal, 2=verbose [default: 1]',
+    #                    type=int,
+    #                    choices=[0, 1, 2],
+    #                    default=1)
+
+    parser.add_argument('-v', '--version', action='version',
+                        version='%(prog)s {version}'.format(version=__version__))
 
     parser.set_defaults(func=quant)
+
 
     # Print help message if no arguments are given
     import sys
