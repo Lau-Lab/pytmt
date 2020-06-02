@@ -1,5 +1,4 @@
 """
-tmt-quant v.0.2.0
 Reads in crux/percolator tab-delimited results (psms) and returns tmt values
 
 Molecular Proteomics Laboratory
@@ -7,7 +6,7 @@ http://maggielab.org
 
 """
 
-__version_info__ = ('0', '2', '0')
+__version_info__ = ('0', '3', '0')
 __version__ = '.'.join(__version_info__)
 
 import pymzml as mz
@@ -15,6 +14,7 @@ import os.path
 import re
 import pandas as pd
 import tqdm
+import logging
 
 
 class Mzml(object):
@@ -89,7 +89,6 @@ def quant(args):
         crux 3.1 tide > crux 3.1 percolator
 
     To-do features:
-        tmt 6-plex and other reporters
         ms3 or multi-notch (shifting scan numbers)
         read in mzID files rather than percolator
         normalization and isotope purity adjustment
@@ -97,12 +96,9 @@ def quant(args):
 
     Known issues:
         uses only directory index to match mzml files because of percolator
-        pymzml cannot parse certain (< 0.5%) ms2 spectra in test_mzml_2
 
-    Potential issues:
-        currently max of intensities is returned if multiple peaks are within the tolerance of reporter \\
-        (alternative would be to return sum intensity of all peaks, or return \\
-        the peak closest to the reporter, or drop the reporter altogether and return 0)
+   Note:
+        currently the sum of intensities is returned if multiple peaks are within the tolerance of reporter
 
     Usage:
         python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.1 -p 20 -u -o pq_test
@@ -117,6 +113,30 @@ def quant(args):
     :param args:    arguments from argparse
     :return:        Exit OK
     """
+    # Main logger setup
+    main_log = logging.getLogger('py-tmt-quant')
+    main_log.setLevel(logging.DEBUG)
+
+    # create file handler which logs even debug messages
+    os.makedirs(args.out, exist_ok=True)
+    fh = logging.FileHandler(os.path.join(args.out, 'tmt.log'))
+    fh.setLevel(logging.INFO)
+
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    # add the handlers to the logger
+    main_log.addHandler(fh)
+    main_log.addHandler(ch)
+
+    main_log.info(args)
+    main_log.info(__version__)
 
     # Folders of mzML files and the Percolator results.
     mzml_loc = args.mzml
@@ -202,9 +222,12 @@ def quant(args):
     # For each file index (fraction), open the mzML file, and create a subset Percolator ID dataframe
     for idx in file_indices:
 
-        # Verbosity 0 progress message
-        print('Reading mzml file:', mzml_files[idx],
-              '(' + str(idx + 1), 'of', str(len(file_indices)) + ')', sep=' ')
+        # Logging mzML
+        main_log.info('Reading mzml file: {0} ({1} of {2})'.format(mzml_files[idx],
+                                                                   str(idx + 1),
+                                                                   str(len(file_indices)),
+                                                                   )
+                      )
 
         # Make a subset dataframe with the current file index (fraction) being considered
         fraction_id_df = id_df[id_df['file_idx'] == idx]
@@ -216,7 +239,6 @@ def quant(args):
         fraction_mzml = Mzml(path=os.path.join(mzml_loc, mzml_files[idx]),
                              precision=precision)
         fraction_mzml.parse_mzml_ms2()
-
 
         # Loop through each qualifying row in sub_df_filtered
         for i in tqdm.trange(len(fraction_id_df)):
@@ -275,7 +297,12 @@ def quant(args):
                 upper = reporter + reporter*(precision/2)*1e-6
                 lower = reporter - reporter*(precision/2)*1e-6
 
-                tmt_intensities.append(sum([I for mz_value, I in spectrum if upper > mz_value > lower]))
+                reporter_intensity = sum([I for mz_value, I in spectrum if upper > mz_value > lower])
+                tmt_intensities.append(round(reporter_intensity, 2))
+
+            # Write total spectrum intensity
+            spectrum_intensity = sum([I for mz_value, I in spectrum])
+            tmt_intensities.append(round(spectrum_intensity, 2))
 
             # Grow the results into an output list of lists (creating if does not exist)
             try:
@@ -290,13 +317,14 @@ def quant(args):
     for reporter in reporters:
         output_df_columns.append('m' + str(reporter))
 
+    output_df_columns.append('spectrum_int')
+
     output_df = pd.DataFrame(output_list, columns=output_df_columns)
 
     # Final output, merging the input and output tables
     final_df = pd.merge(id_df, output_df, how='left')
 
     # Create output directory if it does not exist
-    os.makedirs(args.out, exist_ok=True)
     save_path = os.path.join(args.out, 'tmt_out.txt')
 
     # Save the file
@@ -313,8 +341,8 @@ if __name__ == '__main__':
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='tmt-quant returns tmt quantification'
-                                                 'values from Percolator output')
+    parser = argparse.ArgumentParser(description='py-tmt-quant returns ms2 tmt quantification'
+                                                 'values from Crux Percolator output')
 
     parser.add_argument('mzml', help='path to folder containing mzml files')
 
@@ -340,11 +368,6 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--out', help='name of the output directory [default: tmt_out]',
                         default='tmt_out')
 
-    #parser.add_argument('-vb', '--verbosity',
-    #                    help='verbosity of error messages. 0=quiet, 1=normal, 2=verbose [default: 1]',
-    #                    type=int,
-    #                    choices=[0, 1, 2],
-    #                    default=1)
 
     parser.add_argument('-v', '--version', action='version',
                         version='%(prog)s {version}'.format(version=__version__))
