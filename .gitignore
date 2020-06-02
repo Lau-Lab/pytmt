@@ -1,9 +1,8 @@
-# Custom
+# OSX
 .DS_Store
-test_mzml/
-test_percolator/
-.idea/
 
+# PyCharm
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

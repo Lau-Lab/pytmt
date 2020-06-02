@@ -6,8 +6,7 @@ http://maggielab.org
 
 """
 
-__version_info__ = ('0', '3', '0')
-__version__ = '.'.join(__version_info__)
+from pytmt import __version__
 
 import pymzml as mz
 import os.path
@@ -101,7 +100,7 @@ def quant(args):
         currently the sum of intensities is returned if multiple peaks are within the tolerance of reporter
 
     Usage:
-        python tmtquant.py ./test_mzml_2 ./test_perc_2 -q 0.1 -p 20 -u -o pq_test
+        python main.py ./test_mzml_2 ./test_perc_2 -q 0.1 -p 20 -u -o pq_test
 
     Example values for arguments:
         mzml_loc = './test_mzml_2'
@@ -333,11 +332,12 @@ def quant(args):
     return sys.exit(os.EX_OK)
 
 
-"""
-argparse code for running main function with parsed arguments from command line
+def main():
+    """
+    Entry point
 
-"""
-if __name__ == '__main__':
+    :return:
+    """
 
     import argparse
 
