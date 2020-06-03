@@ -5,7 +5,9 @@
 import unittest
 import os
 import ftplib
+import pandas as pd
 from tqdm import tqdm
+
 
 class MzmlTest(unittest.TestCase):
     """
@@ -21,7 +23,7 @@ class MzmlTest(unittest.TestCase):
 
         mzml_files = ['20180416_StemCell_TMT_Block6_F7.mzML', '20180416_StemCell_TMT_Block6_F8.mzML']
 
-        test_path = os.path.join('data', 'mzml')
+        test_path = os.path.join('tests', 'data', 'mzml')
 
         file1_exists = os.path.isfile(os.path.join(test_path, mzml_files[0]))
         file2_exists = os.path.isfile(os.path.join(test_path, mzml_files[1]))
@@ -60,17 +62,30 @@ class MzmlTest(unittest.TestCase):
 
         ftp.quit()
 
-
     def tearDown(self):
         pass
 
-
-    def test_that_mzml_opens(self):
+    def test_that_percolator_file_exists(self):
         """
-        Opens the mzml files
+        Check that there is one percolator file
         """
 
+        percolator_path = os.path.join('tests', 'data', 'percolator')
+        id_files = [f for f in os.listdir(percolator_path) if f.endswith('target.psms.txt')]
 
-        # return True
+        self.assertEqual(len(id_files), 1)
 
-        pass
+    def test_that_percolator_file_opens(self):
+        """
+        Check that percolator file can be opened by panda
+        """
+
+        percolator_path = os.path.join('tests', 'data', 'percolator')
+        id_files = [f for f in os.listdir(percolator_path) if f.endswith('target.psms.txt')]
+
+        id_df = pd.read_csv(filepath_or_buffer=os.path.join(percolator_path, id_files[0]),
+                            sep='\t')
+
+        print(id_df)
+
+
