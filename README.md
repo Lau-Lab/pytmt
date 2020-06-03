@@ -1,11 +1,9 @@
-# Pytmt v.0.2.1
-
 PyTMT returns ms2 tandem mass tag quantification values from Crux/Percolator output.
 
 ## Getting Started
 
-#### Requirements
 
+#### Requirements
 
 Install Python 3.6+ and pip. See instructions on Python website for specific instructions for your operating system.
 
@@ -40,16 +38,13 @@ tqdm>=4.46.0
 ```
 
 ## Contributing
-
 Please contact us if you wish to contribute, and submit pull requests to us.
 
 
 ## Authors
-
 * **Edward Lau, PhD** - *Code/design* - [ed-lau](https://github.com/ed-lau)
 * **Maggie Lam, PhD** - *Code/design* - [Maggie-Lam](https://github.com/Maggie-Lam)
 
 
 ## License
-
-This project is licensed under the MIT License - see the [license.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the LICENSE file for details

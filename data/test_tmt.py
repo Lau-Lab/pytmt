@@ -21,7 +21,7 @@ class MzmlTest(unittest.TestCase):
 
         mzml_files = ['20180416_StemCell_TMT_Block6_F7.mzML', '20180416_StemCell_TMT_Block6_F8.mzML']
 
-        test_path = os.path.join('tests', 'data', 'mzml')
+        test_path = os.path.join('data', 'mzml')
 
         file1_exists = os.path.isfile(os.path.join(test_path, mzml_files[0]))
         file2_exists = os.path.isfile(os.path.join(test_path, mzml_files[1]))
@@ -32,11 +32,9 @@ class MzmlTest(unittest.TestCase):
         if not os.path.exists(test_path):
             os.makedirs(test_path)
 
-
         ftp = ftplib.FTP("ftp.pride.ebi.ac.uk")
         ftp.login(user='', passwd='')
         ftp.cwd('/pride/data/archive/2019/12/PXD013426/')
-
 
         for px_file in mzml_files:
             size = ftp.size(px_file)

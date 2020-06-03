@@ -2,34 +2,16 @@
 
 from setuptools import setup, find_packages
 import os.path
-import codecs
-
-here = os.path.abspath(os.path.dirname(__file__))
 
 # Get the long description from the README file
+here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 
-# Get version number from __init__
-def read(rel_path):
-    here = os.path.abspath(os.path.dirname(__file__))
-    with codecs.open(os.path.join(here, rel_path), 'r') as fp:
-        return fp.read()
-
-
-def get_version(rel_path):
-    for line in read(rel_path).splitlines():
-        if line.startswith('__version__'):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
-    else:
-        raise RuntimeError("Unable to find version string.")
-
-
 setup(
     name='pytmt',
-    version=get_version("pytmt/__init__.py"),
+    version="0.2.3",
     description='pytmt returns ms2 tmt quantification values from Crux Percolator output',
 
     long_description=long_description,
