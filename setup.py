@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pytmt',
-    version="0.2.3",
+    version="0.2.4",
     description='pytmt returns ms2 tmt quantification values from Crux Percolator output',
 
     long_description=long_description,

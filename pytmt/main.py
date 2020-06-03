@@ -3,9 +3,6 @@
 
 """ Reads in crux/percolator tab-delimited results (psms) and returns tmt values"""
 
-from pytmt import __version__
-
-import pymzml as mz
 import os.path
 import sys
 import re
@@ -13,69 +10,13 @@ import pandas as pd
 import tqdm
 import logging
 
-
-class Mzml(object):
-
-    def __init__(
-            self,
-            path,
-            precision
-    ):
-        """
-        This class reads mzml files using pymzml
-
-        :param path: path of the mzml file to be loaded, e.g., "~/Desktop/example.mzml"
-        :param precision: integer determines precision of reading as well as mass tolerance of peak integration (ppm)
-        """
-
-        self.path = path
-        self.msdata = {}
-        self.rt_idx = {}
-        self.mslvl_idx = {}
-        self.precision = precision
-
-    def parse_mzml_ms2(self):
-        """
-        Read the mzml file and create data dictionary for all ms2 peaks
-        :return:
-        """
-
-        #
-        run = mz.run.Reader(self.path,
-                            MS_precision={
-                                1: self.precision*1e-6,
-                                2: self.precision*1e-6
-                            })
-
-        for n, spec in enumerate(run):
-
-            #if n % 1000 == 0:
-            #    print(
-            #        'Loading spectrum {0} at retention time {scan_time:1.2f}'.format(
-            #           spec.ID,
-            #            scan_time=spec.scan_time
-            #        )
-            #   )
-
-            self.mslvl_idx[n + 1] = spec.ms_level
-            self.rt_idx[n + 1] = spec.scan_time
-
-            if spec.ms_level == 2:
-                self.msdata[n + 1] = spec.peaks("centroided")
-
-        print(
-            'Parsed {0} spectra from file {1}'.format(
-                n + 1,
-                self.path)
-            )
-
-        return True
-
-
+from pytmt import __version__
+from pytmt.get_spec import Mzml
+from pytmt import tmt_reporters
 
 def quant(args):
     """
-    Main and only function. This reads in Percolator tab-delimited results (PSMS) \\
+     reads in Percolator tab-delimited results (PSMS) \\
      and filter each row by protein-uniqueness and by Percolator q value \\
      then it opens the corresponding mzML file of the fraction and finds the scan \\
      and returns the intensity of each TMT reporter within specified \\
@@ -94,15 +35,15 @@ def quant(args):
     Known issues:
         uses only directory index to match mzml files because of percolator
 
-   Note:
+    Note:
         currently the sum of intensities is returned if multiple peaks are within the tolerance of reporter
 
     Usage:
-        python main.py ./test_mzml_2 ./test_perc_2 -q 0.1 -p 20 -u -o pq_test
+        pytmt tests/data/mzml tests/data/percolator -o ~/Desktop/pytmt
 
     Example values for arguments:
-        mzml_loc = './test_mzml_2'
-        id_loc = './test_perc_2'
+        mzml_loc = 'tests/data/mzml'
+        id_loc = 'tests/data/percolator'
         precision = 10
         q_filter = 0.1
         unique_only = True
@@ -110,8 +51,9 @@ def quant(args):
     :param args:    arguments from argparse
     :return:        Exit OK
     """
+
     # Main logger setup
-    main_log = logging.getLogger('py-tmt-quant')
+    main_log = logging.getLogger('pytmt')
     main_log.setLevel(logging.DEBUG)
 
     # create file handler which logs even debug messages
@@ -141,41 +83,8 @@ def quant(args):
 
     assert args.multiplex in [0, 2, 6, 10, 11, 16], '[error] TMT multiplexity not 0, 2, 6, 10, 11 or 16'
 
-    # Define the reporter ion m/z values. Support TMT 0, 2, 6, 10, 11, 16-plex for now.
-    all_reporters = [126.127726,  # 126
-                     127.124761,  # 127N
-                     127.131081,  # 127C
-                     128.128116,  # 128N
-                     128.134436,  # 128C
-                     129.131471,  # 129N
-                     129.137790,  # 129C
-                     130.134825,  # 130N
-                     130.141145,  # 130C
-                     131.138180,  # 131N
-                     131.144499,  # 131C (11-plex)
-                     132.141535,  # 132N (Pro)
-                     132.147855,  # 132C (Pro)
-                     133.144890,  # 133N (Pro)
-                     133.141210,  # 133C (Pro)
-                     134.148245,  # 134C (Pro)
-                     ]
-    if args.multiplex == 16:
-        reporters = [i for n, i in enumerate(all_reporters)]
-
-    elif args.multiplex == 11:
-        reporters = [i for n, i in enumerate(all_reporters) if n in range(0, 11)]
-
-    elif args.multiplex == 10:
-        reporters = [i for n, i in enumerate(all_reporters) if n in range(0, 10)]
-
-    elif args.multiplex == 6:
-        reporters = [i for n, i in enumerate(all_reporters) if n in [0, 2, 4, 5, 8, 9]]
-
-    elif args.multiplex == 2:
-        reporters = [i for n, i in enumerate(all_reporters) if n in [0, 2]]
-
-    elif args.multiplex == 0:
-        reporters = [i for n, i in enumerate(all_reporters) if n in range(0, 1)]
+    # Get the reporter masses
+    reporters = tmt_reporters.get_reporter(args.multiplex)
 
     # Define the PPM of integration
     precision = args.precision
@@ -274,7 +183,8 @@ def quant(args):
                 spectrum = fraction_mzml.msdata.get(scan)
 
             except KeyError:
-                print('[error] spectrum index out of bound')
+                main_log.error('[error] spectrum index out of bound')
+                continue
 
             #except xml.etree.ElementTree.ParseError:
             #    if args.verbosity == 2:
@@ -327,6 +237,7 @@ def quant(args):
     # Save the file
     final_df.to_csv(save_path, sep='\t')
 
+    main_log.info("Run completed successfully.")
     return sys.exit(os.EX_OK)
 
 

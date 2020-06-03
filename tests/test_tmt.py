@@ -77,7 +77,7 @@ class MzmlTest(unittest.TestCase):
 
     def test_that_percolator_file_opens(self):
         """
-        Check that percolator file can be opened by panda
+        Check that percolator file can be opened by pandas and has two Mzml indices
         """
 
         percolator_path = os.path.join('tests', 'data', 'percolator')
@@ -86,6 +86,9 @@ class MzmlTest(unittest.TestCase):
         id_df = pd.read_csv(filepath_or_buffer=os.path.join(percolator_path, id_files[0]),
                             sep='\t')
 
-        print(id_df)
+        # Get all the file indices in the Percolator results file.
+        file_indices = list(set(id_df['file_idx']))
+
+        self.assertEqual(len(file_indices), 2)
 
 
