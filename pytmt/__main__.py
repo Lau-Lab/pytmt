@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""riana.__main__: executed when jcast directory is called as script."""
 
-"""pytmt.__main__: executed when jcast directory is called as script."""
-
-from .main import main
+from pytmt.main import main
 
 main()

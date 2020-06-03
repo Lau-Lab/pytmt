@@ -12,7 +12,7 @@ import re
 import pandas as pd
 import tqdm
 import logging
-import argparse
+
 
 class Mzml(object):
 
