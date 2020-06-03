@@ -1,20 +1,18 @@
-"""
-Reads in crux/percolator tab-delimited results (psms) and returns tmt values
+# -*- coding: utf-8 -*-
 
-Molecular Proteomics Laboratory
-http://maggielab.org
 
-"""
+""" Reads in crux/percolator tab-delimited results (psms) and returns tmt values"""
 
 from pytmt import __version__
 
 import pymzml as mz
 import os.path
+import sys
 import re
 import pandas as pd
 import tqdm
 import logging
-
+import argparse
 
 class Mzml(object):
 
@@ -341,7 +339,7 @@ def main():
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='py-tmt-quant returns ms2 tmt quantification'
+    parser = argparse.ArgumentParser(description='pytmt returns ms2 tmt quantification'
                                                  'values from Crux Percolator output')
 
     parser.add_argument('mzml', help='path to folder containing mzml files')
@@ -376,7 +374,7 @@ def main():
 
 
     # Print help message if no arguments are given
-    import sys
+
     if len(sys.argv[1:]) == 0:
         parser.print_help()
         parser.exit()
