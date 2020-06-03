@@ -65,13 +65,9 @@ class MzmlTest(unittest.TestCase):
         pass
 
 
-    def test_that_mzml_downloads(self):
+    def test_that_mzml_opens(self):
         """
-
-        Write a test for downloading mzml from PXD and ship test percolator file..
-
-
-        :return:
+        Opens the mzml files
         """
 
 
