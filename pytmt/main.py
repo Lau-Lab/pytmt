@@ -13,6 +13,7 @@ import logging
 from pytmt import __version__
 from pytmt.get_spec import Mzml
 from pytmt import tmt_reporters
+from pytmt import quantify_spec
 
 def quant(args):
     """
@@ -59,11 +60,11 @@ def quant(args):
     # create file handler which logs even debug messages
     os.makedirs(args.out, exist_ok=True)
     fh = logging.FileHandler(os.path.join(args.out, 'tmt.log'))
-    fh.setLevel(logging.INFO)
+    fh.setLevel(logging.DEBUG)
 
     # create console handler with a higher log level
     ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
+    ch.setLevel(logging.INFO)
 
     # create formatter and add it to the handlers
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -84,7 +85,7 @@ def quant(args):
     assert args.multiplex in [0, 2, 6, 10, 11, 16], '[error] TMT multiplexity not 0, 2, 6, 10, 11 or 16'
 
     # Get the reporter masses
-    reporters = tmt_reporters.get_reporter(args.multiplex)
+    reporters = tmt_reporters.get_reporters(args.multiplex)
 
     # Define the PPM of integration
     precision = args.precision
@@ -152,24 +153,6 @@ def quant(args):
             # Get current scan number
             scan = fraction_id_df.loc[i, 'scan']
 
-            '''
-            # Verbosity 1 progress message (display progress every 1000 rows)
-            if (i+1) % 1000 == 0 and args.verbosity > 0:
-                print('[verbosity 1] doing mzml:', mzml_files[idx], '(' + str(idx + 1),
-                      'of', str(len(file_indices)) + ');', 'PSM:', i+1, 'of', len(fraction_id_df),
-                      '(scan number:', str(scan) + ')', sep=' ')
-
-            # Verbosity 2 progress message (calculates time remaining)
-            if (i + 1) % 1000 == 0 and args.verbosity == 2:
-                t2 = time()
-                avg_time = (t2 - t1) / (i + 1)
-                eta = ((len(fraction_id_df) - i) * avg_time) / 60
-
-                print('[verbosity 2] elapsed:', round((t2 - t1) / 60, 2), 'minutes.',
-                      'estimated remaining time for current fraction:', round(eta, 2), 'minutes.', sep=' ')
-                      
-            '''
-
             # If q-value filter is on, skip any row that fails the filter.
             if fraction_id_df.loc[i, 'percolator q-value'] > q_filter:
                 continue
@@ -197,19 +180,14 @@ def quant(args):
             # For each reporter, check that the spectrum has that peak using pymzml
             # This returns a (m/z, intensity) tuple
             # We will append the intensity of each reporter to a list
-            tmt_intensities = [idx, scan]
 
-            for reporter in reporters:
-
-                upper = reporter + reporter*(precision/2)*1e-6
-                lower = reporter - reporter*(precision/2)*1e-6
-
-                reporter_intensity = sum([I for mz_value, I in spectrum if upper > mz_value > lower])
-                tmt_intensities.append(round(reporter_intensity, 2))
-
-            # Write total spectrum intensity
-            spectrum_intensity = sum([I for mz_value, I in spectrum])
-            tmt_intensities.append(round(spectrum_intensity, 2))
+            # Get the intensity of each reporter
+            tmt_intensities = quantify_spec.quantify_reporters(idx=idx,
+                                                               scan=scan,
+                                                               spectrum=spectrum,
+                                                               precision=precision,
+                                                               reporters=reporters,
+                                                               digits=2)
 
             # Grow the results into an output list of lists (creating if does not exist)
             try:

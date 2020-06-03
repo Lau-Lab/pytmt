@@ -1,4 +1,12 @@
+# -*- coding: utf-8 -*-
+
+
+""" Reads in mzml file using pymzml and get list of ms2 scans """
+
+import logging
+
 import pymzml as mz
+
 
 class Mzml(object):
 
@@ -19,6 +27,8 @@ class Mzml(object):
         self.rt_idx = {}
         self.mslvl_idx = {}
         self.precision = precision
+
+        self.logger = logging.getLogger('pytmt.mzml')
 
     def parse_mzml_ms2(self):
         """
@@ -49,11 +59,11 @@ class Mzml(object):
             if spec.ms_level == 2:
                 self.msdata[n + 1] = spec.peaks("centroided")
 
-        print(
-            'Parsed {0} spectra from file {1}'.format(
-                n + 1,
-                self.path)
-            )
+        self.logger.info(
+                'Parsed {0} spectra from file {1}'.format(
+                    n + 1,
+                    self.path)
+                )
 
         return True
 

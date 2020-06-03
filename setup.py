@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pytmt',
-    version="0.2.4",
+    version="0.2.6",
     description='pytmt returns ms2 tmt quantification values from Crux Percolator output',
 
     long_description=long_description,
@@ -62,7 +62,12 @@ setup(
 
     project_urls={
         'Source': 'https://github.com/Molecular-Proteomics/pytmt',
-        'Maggie Lam Lab': 'http://www.maggielab.irg',
+        'Maggie Lam Lab': 'http://www.maggielab.org',
     },
+
+    data_files=[('tests',
+                 [os.path.join('tests', 'data', 'percolator', 'percolator.target.mzid'),
+                  os.path.join('tests', 'data', 'percolator', 'percolator.target.psms.txt'), ]),
+                ],
 
 )
