@@ -5,7 +5,7 @@ PyTMT returns ms2 tandem mass tag quantification values from Crux/Percolator out
 
 #### Requirements
 
-Install Python 3.6+ and pip. See instructions on Python website for specific instructions for your operating system.
+Install Python 3.7+ and pip. See instructions on Python website for specific instructions for your operating system.
 
 Install pytmt from PyPI. We recommend using a virtual environment.
 		
@@ -38,7 +38,7 @@ To run pytmt on the test data files and print the file to Desktop:
 
 ### Prerequisites
 
-pytmt is tested in Python 3.6, 3.7, and 3.8 and requires the following packages:
+pytmt is tested in Python 3.7, and 3.8 and requires the following packages:
 
 ```
 pandas>=1.0.4

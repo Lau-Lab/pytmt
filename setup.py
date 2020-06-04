@@ -51,7 +51,7 @@ setup(
 
     python_requires='>=3.6, <4',
 
-    install_requires=['pandas>=0.4,<2',
+    install_requires=['pandas>=1.0,<2',
                       'pymzml>=2,<3',
                       'tqdm>=4,<5'],  # external packages as dependencies
     entry_points={
