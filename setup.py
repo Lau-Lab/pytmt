@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pytmt',
-    version="0.2.6",
+    version='0.2.7',
     description='pytmt returns ms2 tmt quantification values from Crux Percolator output',
 
     long_description=long_description,
@@ -19,7 +19,7 @@ setup(
 
     url='https://github.com/Molecular-Proteomics/pytmt',
 
-    author='Edward Lau',
+    author='Edward Lau, Maggie Lam',
     author_email='edward.lau@cuanschutz.edu',
 
     classifiers=[  # Optional
@@ -56,7 +56,7 @@ setup(
                       'tqdm>=4,<5'],  # external packages as dependencies
     entry_points={
         'console_scripts': [
-            'pytmt=pytmt.main:main',
+            'pytmt=pytmt.__main__:main',
         ],
     },
 
