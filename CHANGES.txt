@@ -1,0 +1,4 @@
+v.0.2.8
+---
+* input changed from specifying percolator directory to percolator file path
+* added preliminary support for standalone percolator output (psms)
