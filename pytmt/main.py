@@ -102,7 +102,6 @@ def quant(args):
 
     # List all files in the percolator directory ending with target.psms.txt.
         # id_files = [f for f in os.listdir(id_loc) if f.endswith('target.psms.txt')]
-
         # assert len(id_files) == 1, 'Check percolator output directory has 1 *.target.psms.txt'
 
     # Read the Percolator psms file.
@@ -122,7 +121,7 @@ def quant(args):
         id_df['percolator q-value'] = id_df['percolator q-value'].astype(float)
         id_df['posterior_error_prob'] = id_df['posterior_error_prob'].astype(float)
         # Then read in the protein names and join them by comma instead of tab
-        id_df['protein id'] = [','.join(ln.split('\t')[5:]) for ln in f_ln[1:]]
+        id_df['protein id'] = [','.join(ln.rstrip().split('\t')[5:]) for ln in f_ln[1:]]
 
         # Split the PSMId column to create file_idx, scan, and charge.
         id_df['charge'] = [psm.split('_')[-2] for psm in id_df['PSMId']]
