@@ -40,7 +40,7 @@ def quant(args):
         currently the sum of intensities is returned if multiple peaks are within the tolerance of reporter
 
     Usage:
-        pytmt tests/data/mzml tests/data/percolator -o ~/Desktop/pytmt
+        pytmt tests/data/mzml tests/data/percolator/percolator.target.psms.txt -o out
 
     Example values for arguments:
         mzml_loc = 'tests/data/mzml'
@@ -97,17 +97,20 @@ def quant(args):
     # Define the Percolator protein-unique PSM filter
     unique_only = args.unique
 
-    assert os.path.isdir(mzml_loc), '[error] mzml directory not valid'
-    assert os.path.isdir(id_loc), '[error] percolator directory not valid'
+    assert os.path.isdir(mzml_loc), '[error] mzml directory path not valid'
+    assert os.path.isfile(id_loc), '[error] percolator file path not valid'
 
     # List all files in the percolator directory ending with target.psms.txt.
-    id_files = [f for f in os.listdir(id_loc) if f.endswith('target.psms.txt')]
+        # id_files = [f for f in os.listdir(id_loc) if f.endswith('target.psms.txt')]
 
-    assert len(id_files) == 1, 'Check percolator output directory has 1 *.target.psms.txt'
+        # assert len(id_files) == 1, 'Check percolator output directory has 1 *.target.psms.txt'
 
     # Read the Percolator psms file.
-    id_df = pd.read_csv(filepath_or_buffer=os.path.join(id_loc, id_files[0]),
+    id_df = pd.read_csv(filepath_or_buffer=id_loc,  # os.path.join(id_loc, id_files[0]),
                         sep='\t')
+
+    # Test whether it is the Crux Percolator file by looking for the file_idx column
+
 
     # Get all the file indices in the Percolator results file.
     file_indices = list(set(id_df['file_idx']))
@@ -228,12 +231,12 @@ def main():
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='pytmt returns ms2 tmt quantification'
-                                                 'values from Crux Percolator output')
+    parser = argparse.ArgumentParser(description='pytmt returns ms2 tmt quantification values'
+                                                 'from Percolator (Crux or Standalone) output')
 
     parser.add_argument('mzml', help='path to folder containing mzml files')
 
-    parser.add_argument('id', help='path to folder containing percolator tab-delimited files')
+    parser.add_argument('id', help='path to percolator target psms output file')
 
     parser.add_argument('-u', '--unique', action='store_true', help='quantify unique peptides only')
 
