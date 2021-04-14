@@ -24,7 +24,7 @@ Console entry point:
     
 Example command: 
 	
-	$ python -m pytmt /path/to/mzml/ /path/to/percolator/ -o /path/to/output/
+	$ python -m pytmt /path/to/mzml/ /path/to/percolator/psms.txt -o /path/to/output/
 	
 To test installation of test data files and download two test mzml files from ProteomeXchange:
 
@@ -33,7 +33,7 @@ To test installation of test data files and download two test mzml files from Pr
 
 To run pytmt on the test data files and print the file to Desktop:
     
-    $ pytmt tests/data/mzml tests/data/percolator -o ~/Desktop/pytmt2
+    $ pytmt tests/data/mzml tests/data/percolator/percolator.target.psms.txt -o ~/Desktop/pytmt2
     
 
 ### Prerequisites

@@ -120,6 +120,10 @@ def quant(args):
         id_df.columns = ['PSMId', 'score', 'percolator q-value', 'posterior_error_prob', 'peptide']
         id_df['percolator q-value'] = id_df['percolator q-value'].astype(float)
         id_df['posterior_error_prob'] = id_df['posterior_error_prob'].astype(float)
+
+        # Create a sequence column for compatibility
+        id_df['sequence'] = [pep[2:-2] for pep in id_df['peptide']]
+
         # Then read in the protein names and join them by comma instead of tab
         id_df['protein id'] = [','.join(ln.rstrip().split('\t')[5:]) for ln in f_ln[1:]]
 
