@@ -198,9 +198,18 @@ def quant(args):
             try:
                 spectrum = fraction_mzml.msdata.get(scan)
 
+                # Tidy this up
+                if spectrum is None:
+                    main_log.error('[error] spectrum index out of bound or is empty')
+                    raise KeyError
+
+            # TODO: This doesn't give a KeyError currently. Need to catch when the id scans don't match the mzml.
             except KeyError:
                 main_log.error('[error] spectrum index out of bound')
                 continue
+
+
+
 
             #except xml.etree.ElementTree.ParseError:
             #    if args.verbosity == 2:
