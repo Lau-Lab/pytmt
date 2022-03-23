@@ -23,7 +23,11 @@ def quantify_reporters(idx, scan, spectrum, precision, reporters, digits):
         upper = reporter + reporter * (precision / 2) * 1e-6
         lower = reporter - reporter * (precision / 2) * 1e-6
 
-        reporter_intensity = sum([I for mz_value, I in spectrum if upper > mz_value > lower])
+        try:
+            reporter_intensity = sum([I for mz_value, I in spectrum if upper > mz_value > lower])
+        except TypeError:
+            reporter_intensity = 0
+
         tmt_intensities.append(round(reporter_intensity, digits))
 
     # Write total spectrum intensity
