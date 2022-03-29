@@ -192,12 +192,17 @@ def quant(args):
     # For each file index (fraction), open the mzML file, and create a subset Percolator ID dataframe
     for idx in file_indices:
 
+        # 2022-03-28 try to open either mzML or mzML.gz
+        # TODO: may have to account for .mzml and mzml.gz rather than .mzML
+        if os.path.exists(os.path.join(mzml_loc, mzml_files[idx] + '.mzML')):
+            mzml_path = os.path.join(mzml_loc, mzml_files[idx] + '.mzML')
+        elif os.path.exists(os.path.join(mzml_loc, mzml_files[idx] + '.mzML.gz')):
+            mzml_path = os.path.join(mzml_loc, mzml_files[idx] + '.mzML.gz')
+        else:
+            raise FileNotFoundError
+
         # Logging mzML
-        main_log.info('Reading mzml file: {0} ({1} of {2})'.format(mzml_files[idx],
-                                                                   str(idx + 1),
-                                                                   str(len(file_indices)),
-                                                                   )
-                      )
+        main_log.info(f'Reading mzml file: {os.path.basename(mzml_path)} ({idx + 1} of {len(file_indices)})')
 
         # Make a subset dataframe with the current file index (fraction) being considered
         fraction_id_df = id_df[id_df['file_idx'] == idx]
@@ -206,7 +211,7 @@ def quant(args):
         fraction_id_df = fraction_id_df.sort_values(by='scan').reset_index(drop=True)
 
         # Open the mzML file
-        fraction_mzml = Mzml(path=os.path.join(mzml_loc, mzml_files[idx]),
+        fraction_mzml = Mzml(path=mzml_path,
                              precision=precision)
         fraction_mzml.parse_mzml_ms2()
 
