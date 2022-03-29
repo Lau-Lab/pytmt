@@ -4,7 +4,7 @@
 """ Reads in mzml file using pymzml and get list of ms2 scans """
 
 import logging
-
+import os
 import pymzml as mz
 
 
@@ -36,12 +36,21 @@ class Mzml(object):
         :return:
         """
 
-        #
-        run = mz.run.Reader(self.path,
+        # 2022-03-28 try to open either mzML or mzML.gz
+        if os.path.exists(self.path + '.mzML'):
+            open_path = self.path + '.mzML'
+        elif os.path.exists(self.path + '.mzML.gz'):
+            open_path = self.path + '.mzML.gz'
+        else:
+            raise FileNotFoundError
+
+        run = mz.run.Reader(open_path,
                             MS_precision={
                                 1: self.precision*1e-6,
                                 2: self.precision*1e-6
                             })
+
+
 
         for n, spec in enumerate(run):
 

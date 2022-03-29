@@ -145,19 +145,49 @@ def quant(args):
     # Get all the file indices in the Percolator results file.
     file_indices = list(set(id_df['file_idx']))
 
-    # Check that the number of mzMLs in the mzML folder is the same as the maximum of the ID file's file_idx column.
-    # Note this will throw an error if not every fraction results in at least some ID, but we will ignore for now.
+    # 2022-03-28 pytmt will now attempt to read the percolator.log.txt file for fraction (file_idx) mzML assignment
+    log_path = os.path.join(os.path.dirname(id_loc), 'percolator.log.txt')
 
-    mzml_files = [f for f in os.listdir(mzml_loc) if re.match('^.*.mzML', f)]
+    # If the log file exists, use it to read the assignment
+    if os.path.exists(log_path):
+        main_log.warning(f'Percolator log file exists at {log_path} and will be used for index assignment.')
 
-    # Sort the mzML files by names
-    # Note this may create a problem if the OS Percolator runs on has natural sorting (xxxx_2 before xxxx_10)
-    # But we will ignore for now
-    mzml_files.sort()
+        with open(log_path, 'r') as f:
+            lines = f.readlines()
 
-    # Throw an error if there is no mzML file in the mzml directory
-    assert len(mzml_files) != 0, '[error] no mzml files in the specified directory'
-    assert len(mzml_files) == max(file_indices) + 1, '[error] number of mzml files not matching id list'
+        mzml_files = {}
+        for line in lines:
+            pattern = re.findall('INFO: Assigning index ([0-9]*) to (.*)\.', line)
+            if len(pattern) == 1:
+                idx, pathname = pattern[0]
+                dirname, filename = os.path.split(pathname)
+                mzml_files[int(idx)] = re.sub('\.pep\.xml', '', filename)
+                #TODO: will probably have to account for .pin or other input to Percolator
+
+    # If the log file does not exist, assign index naively based on sort
+    else:
+        main_log.warning(f'Percolator log file not found at {log_path}; '
+                         f'mzml files will be sorted for index assignment.')
+        # Check that the number of mzMLs in the mzML folder is the same as the maximum of the ID file's file_idx column.
+        # Note this will throw an error if not every fraction results in at least some ID, but we will ignore for now.
+
+        mzml_filelist = [f for f in os.listdir(mzml_loc) if re.match('^.*.mzML', f)]
+        # Sort the mzML files by names
+        # Note this may create a problem if the OS Percolator runs on has natural sorting (xxxx_2 before xxxx_10)
+        # But we will ignore for now
+        mzml_filelist.sort()
+
+        # Make dictionary of idx, filename from enumerate
+        mzml_files = {}
+        for idx, filename in enumerate(mzml_filelist):
+            mzml_files[idx] = re.sub('.mz[Mm][Ll](\.gz)?', '', filename)
+
+        # Throw an error if there is no mzML file in the mzml directory
+        assert len(mzml_files) != 0, '[error] no mzml files in the specified directory'
+        assert len(mzml_files) == max(file_indices) + 1, '[error] number of mzml files not matching id list'
+
+    # Print mzml files to log
+    main_log.info(f'mzml file orders: {mzml_files}')
 
     # For each file index (fraction), open the mzML file, and create a subset Percolator ID dataframe
     for idx in file_indices:
@@ -200,7 +230,7 @@ def quant(args):
 
                 # Tidy this up
                 if spectrum is None:
-                    main_log.error('[error] spectrum index out of bound or is empty')
+                    main_log.error(f'[error] spectrum index {scan} out of bound or is empty')
                     raise KeyError
 
             # TODO: This doesn't give a KeyError currently. Need to catch when the id scans don't match the mzml.
