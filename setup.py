@@ -11,15 +11,15 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pytmt',
-    version='0.3.5',
+    version='0.4.0',
     description='pytmt returns ms2 tmt quantification values from Crux Percolator output',
 
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    url='https://github.com/Molecular-Proteomics/pytmt',
+    url='https://github.com/ed-lau/pytmt',
 
-    author='Edward Lau, Maggie Lam',
+    author='Edward Lau',
     author_email='edward.lau@cuanschutz.edu',
 
     classifiers=[  # Optional
@@ -27,7 +27,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -39,9 +39,9 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate you support Python 3. These classifiers are *not*
         # checked by 'pip install'. See instead 'python_requires' below.
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
 
@@ -53,7 +53,9 @@ setup(
 
     install_requires=['pandas>=1.0,<2',
                       'pymzml>=2,<3',
-                      'tqdm>=4,<5'],  # external packages as dependencies
+                      'tqdm>=4,<5',
+                      'scipy>=1',
+                      ],  # external packages as dependencies
     entry_points={
         'console_scripts': [
             'pytmt=pytmt.__main__:main',
@@ -61,8 +63,8 @@ setup(
     },
 
     project_urls={
-        'Source': 'https://github.com/Molecular-Proteomics/pytmt',
-        'Maggie Lam Lab': 'http://www.maggielab.org',
+        'Source': 'https://github.com/ed-lau/pytmt',
+        'Lau Lab Colorado': 'https://laulab.net',
     },
 
     data_files=[('tests',
