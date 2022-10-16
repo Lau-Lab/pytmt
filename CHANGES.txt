@@ -1,3 +1,11 @@
+v.0.4.0
+---
+* PYTMT now supports TMT contaminant correction.
+
+v.0.3.5
+---
+* PYTMT now reads the percolator output log file from crux to assign mzML files to Percolator file_idx
+
 v.0.2.8
 ---
 * input changed from specifying percolator directory to percolator file path

@@ -14,6 +14,7 @@ from pytmt import __version__
 from pytmt.get_spec import Mzml
 from pytmt import tmt_reporters
 from pytmt import quantify_spec
+from pytmt import correct_matrix
 
 def quant(args):
     """
@@ -162,7 +163,7 @@ def quant(args):
                 idx, pathname = pattern[0]
                 dirname, filename = os.path.split(pathname)
                 mzml_files[int(idx)] = re.sub('\.pep\.xml', '', filename)
-                #TODO: will probably have to account for .pin or other input to Percolator
+                # TODO: will probably have to account for .pin or other input to Percolator
 
     # If the log file does not exist, assign index naively based on sort
     else:
@@ -279,9 +280,17 @@ def quant(args):
     for reporter in reporters:
         output_df_columns.append('m' + str(reporter))
 
-    output_df_columns.append('spectrum_int')
 
+
+    output_df_columns.append('spectrum_int')
     output_df = pd.DataFrame(output_list, columns=output_df_columns)
+
+    # Correct for contamination
+    if args.contam is not None:
+        output_df = correct_matrix.correct_matrix(output_df=output_df,
+                                                  contam=args.contam,
+                                                  nnls=args.nnls,
+                                                  )
 
     # Final output, merging the input and output tables
     final_df = pd.merge(id_df, output_df, how='left')
@@ -306,13 +315,22 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='pytmt returns ms2 tmt quantification values'
-                                                 'from Percolator (Crux or Standalone) output')
+                                                 'from Percolator output and perform contamination'
+                                                 'correction')
 
-    parser.add_argument('mzml', help='path to folder containing mzml files')
+    parser.add_argument('mzml',
+                        help='path to folder containing mzml files',
+                        )
 
-    parser.add_argument('id', help='path to percolator target psms output file')
+    parser.add_argument('id',
+                        help='path to percolator target psms output file',
+                        )
 
-    parser.add_argument('-u', '--unique', action='store_true', help='quantify unique peptides only')
+    parser.add_argument('-u',
+                        '--unique',
+                        action='store_true',
+                        help='quantify unique peptides only',
+                        )
 
     parser.add_argument('-q', '--qvalue',
                         help='quantify peptides with q value below this threshold [default: 1.0]',
@@ -332,9 +350,20 @@ def main():
     parser.add_argument('-o', '--out', help='name of the output directory [default: tmt_out]',
                         default='tmt_out')
 
-
     parser.add_argument('-v', '--version', action='version',
                         version='%(prog)s {version}'.format(version=__version__))
+
+    parser.add_argument('-c', '--contam',
+                        help='Path to contaminant matrix csv file.'
+                             ' Leave blank to get tmt output without correction',
+                        metavar='CONTAM',
+                        type=argparse.FileType('r'),
+                        )
+
+    parser.add_argument('-n', '--nnls',
+                        action='store_true',
+                        help='uses non-negative least square for contamination correction',
+                        )
 
     parser.set_defaults(func=quant)
 
