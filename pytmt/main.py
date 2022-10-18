@@ -83,7 +83,7 @@ def quant(args):
     mzml_loc = args.mzml
     id_loc = args.id
 
-    assert args.multiplex in [0, 2, 6, 10, 11, 16], '[error] TMT multiplexity not 0, 2, 6, 10, 11 or 16'
+    assert args.multiplex in [0, 2, 6, 10, 11, 16, 18], '[error] TMT multiplexity not 0, 2, 6, 10, 11, 16, or 18'
 
     # Get the reporter masses
     reporters = tmt_reporters.get_reporters(args.multiplex)
@@ -338,7 +338,7 @@ def main():
                         default=1.0)
 
     parser.add_argument('-m', '--multiplex',
-                        help='TMT-plex (0, 2, 6, 10, 11, 16) [default:10]',
+                        help='TMT-plex (0, 2, 6, 10, 11, 16, 18) [default:10]',
                         type=int,
                         default=10)
 

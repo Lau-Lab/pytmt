@@ -1,3 +1,7 @@
+v.0.4.1
+---
+* Added support for TMT 18-plex
+
 v.0.4.0
 ---
 * PYTMT now supports TMT contaminant correction.

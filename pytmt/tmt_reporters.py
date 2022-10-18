@@ -12,17 +12,19 @@ all_reporters = [126.127726,  # 126
                  130.134825,  # 130N
                  130.141145,  # 130C
                  131.138180,  # 131N
-                 131.144499,  # 131C (11-plex)
+                 131.144500,  # 131C (11-plex)
                  132.141535,  # 132N (Pro)
                  132.147855,  # 132C (Pro)
                  133.144890,  # 133N (Pro)
                  133.141210,  # 133C (Pro)
-                 134.148245,  # 134C (Pro)
+                 134.148245,  # 134N (Pro)
+                 134,154565,  # 134C (Pro-18)
+                 135.151600,  # 135N (Pro-18)
                  ]
 
 def get_reporters(plex):
     """
-    Define the reporter ion m/z values. Support Thermo TMT 0, 2, 6, 10, 11, 16-plex for now.
+    Define the reporter ion m/z values. Support Thermo TMT 0, 2, 6, 10, 11, 16, or 18-plex for now.
     :param plex: tandem mass tag multiplex type,
     :return: a list of accurate mass values to integrate
     :rtype: list
@@ -30,8 +32,11 @@ def get_reporters(plex):
 
     #
 
-    if plex == 16:
+    if plex == 18:
         reporters = [i for n, i in enumerate(all_reporters)]
+
+    elif plex == 16:
+        reporters = [i for n, i in enumerate(all_reporters) if n in range(0, 16)]
 
     elif plex == 11:
         reporters = [i for n, i in enumerate(all_reporters) if n in range(0, 11)]
