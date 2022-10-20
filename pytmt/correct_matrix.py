@@ -27,7 +27,7 @@ def correct_matrix(output_df: pd.DataFrame,
     # Normalize the contaminant matrix prior to correction
     contam_star = contam / contam.sum(axis=0)
 
-    # %%
+    # Check dimension
     assert len(contam_star.columns) == len(output_df.columns) - 3, 'contaminant matrix not ' \
                                                                    'the same dimension as number of tags'
 
@@ -41,7 +41,6 @@ def correct_matrix(output_df: pd.DataFrame,
         array_list = [np.linalg.solve(contam_star, output_df.iloc[i, 2:len(output_df.columns) - 1])
                       for i in range(0, len(output_df.index))]
 
-
     new_column_names = [f'{rep}_cor' for rep in output_df.columns[2:len(output_df.columns)-1]]
 
     cor_df = pd.DataFrame(np.vstack(array_list), columns=new_column_names)
@@ -50,4 +49,3 @@ def correct_matrix(output_df: pd.DataFrame,
     cor_output_df = pd.concat([output_df, cor_df], axis=1)
 
     return cor_output_df
-
