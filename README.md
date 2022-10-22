@@ -2,7 +2,7 @@
 
 pyTMT returns ms2 tandem mass tag quantification values from Crux/Percolator output.
 
-See the [Documentations](https://ed-lau.github.io/pyTMT/) for more information.
+See the [Documentations](https://lau-lab.github.io/pytmt/) for more information.
 
 ## Getting Started
 
