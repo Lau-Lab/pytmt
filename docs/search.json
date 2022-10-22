@@ -1,0 +1,65 @@
+[
+  {
+    "objectID": "change.html",
+    "href": "change.html",
+    "title": "Change Log",
+    "section": "",
+    "text": "v.0.4.0\n\npyTMT now supports TMT contaminant correction.\nAdded support for TMT 16-plex\n\n\n\nv.0.3.5\n\npyTMT now reads the percolator output log file from crux to assign mzML files to Percolator file_idx\nWhen no log file is present, pyTMT falls back on the old method of ordering mzML files by file names\n\n\n\nv.0.2.8\n\ninput changed from specifying percolator directory to percolator file path\nadded preliminary support for standalone percolator output (psms)"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "section": "",
+    "text": "Edward Lau Lab, University of Colorado School of Medicine Maggie Lam Lab, University of Colorado School of Medicine"
+  },
+  {
+    "objectID": "index.html#about-pytmt",
+    "href": "index.html#about-pytmt",
+    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "section": "About pyTMT",
+    "text": "About pyTMT\nPytmt returns ms2 tandem mass tag quantification values from Crux/Percolator output and mzML mass spectrometry files. It then performs contamination matrix correction for TMT tags."
+  },
+  {
+    "objectID": "index.html#downloads",
+    "href": "index.html#downloads",
+    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "section": "Downloads",
+    "text": "Downloads\n\n\nLatest Updates\nv.0.4.1\n\n\nAdded support for TMT 18-plex\nAdded non-negative least square method for contamination correction\n\n\nSee Change Log for details.\n\nThe latest version and source code of JCAST can be found on github: https://github.com/Lau-Lab/pytmt.\nSee the Documentation page for instructions."
+  },
+  {
+    "objectID": "index.html#contributors",
+    "href": "index.html#contributors",
+    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "section": "Contributors",
+    "text": "Contributors\n\nEdward Lau, PhD - ed-lau\nMaggie Lam, PhD - Maggie-Lam"
+  },
+  {
+    "objectID": "index.html#citations",
+    "href": "index.html#citations",
+    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "section": "Citations",
+    "text": "Citations\n\nProteomic signatures of acute oxidative stress response to paraquat in the mouse heart. Dostal V, Wood SD, Thomas CT, Han Y, Lau E, Lam MPY. Scientific Reports 10, 18440 (2020) doi: 10.1038/s41598-020-75505-8"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "Documentation",
+    "section": "",
+    "text": "Example command:\nTo test installation of test data files and download two test mzml files from ProteomeXchange:\nTo run pytmt on the test data files and print the file to Desktop:"
+  },
+  {
+    "objectID": "about.html#tmt-tags",
+    "href": "about.html#tmt-tags",
+    "title": "Documentation",
+    "section": "TMT tags",
+    "text": "TMT tags\nBelow are the accurate masses used to find the TMT tags signals, and the channels corresponding to each option in the -m argument:\n\n\n\nTag mass\nTag name\n0\n2\n6\n10\n11\n16\n18\n\n\n\n\n126.127726\n126\n✅\n✅\n✅\n✅\n✅\n✅\n✅\n\n\n127.124761\n127N\n\n✅\n\n✅\n✅\n✅\n✅\n\n\n127.131081\n127C\n\n\n✅\n✅\n✅\n✅\n✅\n\n\n128.128116\n128N\n\n\n\n✅\n✅\n✅\n✅\n\n\n128.134436\n128C\n\n\n✅\n✅\n✅\n✅\n✅\n\n\n129.131471\n129N\n\n\n✅\n✅\n✅\n✅\n✅\n\n\n129.137790\n129C\n\n\n\n✅\n✅\n✅\n✅\n\n\n130.134825\n130N\n\n\n\n✅\n✅\n✅\n✅\n\n\n130.141145\n130C\n\n\n✅\n✅\n✅\n✅\n✅\n\n\n131.138180\n131N\n\n\n✅\n✅\n✅\n✅\n✅\n\n\n131.144500\n131C (11-plex)\n\n\n\n\n✅\n✅\n✅\n\n\n132.141535\n132N (Pro)\n\n\n\n\n\n✅\n✅\n\n\n132.147855\n132C (Pro)\n\n\n\n\n\n✅\n✅\n\n\n133.144890\n133N (Pro)\n\n\n\n\n\n✅\n✅\n\n\n133.141210\n133C (Pro)\n\n\n\n\n\n✅\n✅\n\n\n134.148245\n134N (Pro)\n\n\n\n\n\n✅\n✅\n\n\n134,154565\n134C (Pro-18)\n\n\n\n\n\n\n✅\n\n\n135.151600\n135N (Pro-18)\n\n\n\n\n\n\n✅"
+  },
+  {
+    "objectID": "about.html#all-options",
+    "href": "about.html#all-options",
+    "title": "Documentation",
+    "section": "All Options",
+    "text": "All Options\npython -m pytmt -h\nusage: __main__.py [-h] [-u] [-q QVALUE] [-m MULTIPLEX] [-p PRECISION] [-o OUT] [-v] [-c CONTAM] [-n] mzml id\n\npytmt returns ms2 tmt quantification valuesfrom Percolator output and perform contaminationcorrection\n\npositional arguments:\n  mzml                  path to folder containing mzml files\n  id                    path to percolator target psms output file\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -u, --unique          quantify unique peptides only\n  -q QVALUE, --qvalue QVALUE\n                        quantify peptides with q value below this threshold [default: 1.0]\n  -m MULTIPLEX, --multiplex MULTIPLEX\n                        TMT-plex (0, 2, 6, 10, 11, 16, 18) [default:10]\n  -p PRECISION, --precision PRECISION\n                        ms2 spectrum mass shift tolerance in ppm [default: 10]\n  -o OUT, --out OUT     name of the output directory [default: tmt_out]\n  -v, --version         show program's version number and exit\n  -c CONTAM, --contam CONTAM\n                        Path to contaminant matrix csv file. Leave blank to get tmt output without correction\n  -n, --nnls            uses non-negative least square for contamination correction"
+  }
+]

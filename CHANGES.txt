@@ -1,14 +1,18 @@
 v.0.4.1
 ---
 * Added support for TMT 18-plex
+* Added non-negative least square method for contamination correction
 
 v.0.4.0
 ---
-* PYTMT now supports TMT contaminant correction.
+* Pytmt now supports TMT contaminant correction.
+* Added support for TMT 16-plex
+
 
 v.0.3.5
 ---
-* PYTMT now reads the percolator output log file from crux to assign mzML files to Percolator file_idx
+* Pytmt now reads the percolator output log file from crux to assign mzML files to Percolator file_idx
+* When no log file is present, Pytmt falls back on the old method of ordering mzML files by file names
 
 v.0.2.8
 ---
