@@ -9,35 +9,35 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "title": "pyTMT - Tandem Mass Tag Quantifier",
     "section": "",
-    "text": "Edward Lau Lab, University of Colorado School of Medicine Maggie Lam Lab, University of Colorado School of Medicine"
+    "text": "Edward Lau Lab, University of Colorado School of Medicine\nMaggie Lam Lab, University of Colorado School of Medicine"
   },
   {
     "objectID": "index.html#about-pytmt",
     "href": "index.html#about-pytmt",
-    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "title": "pyTMT - Tandem Mass Tag Quantifier",
     "section": "About pyTMT",
     "text": "About pyTMT\nPytmt returns ms2 tandem mass tag quantification values from Crux/Percolator output and mzML mass spectrometry files. It then performs contamination matrix correction for TMT tags."
   },
   {
     "objectID": "index.html#downloads",
     "href": "index.html#downloads",
-    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "title": "pyTMT - Tandem Mass Tag Quantifier",
     "section": "Downloads",
     "text": "Downloads\n\n\nLatest Updates\nv.0.4.1\n\n\nAdded support for TMT 18-plex\nAdded non-negative least square method for contamination correction\n\n\nSee Change Log for details.\n\nThe latest version and source code of JCAST can be found on github: https://github.com/Lau-Lab/pytmt.\nSee the Documentation page for instructions."
   },
   {
     "objectID": "index.html#contributors",
     "href": "index.html#contributors",
-    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "title": "pyTMT - Tandem Mass Tag Quantifier",
     "section": "Contributors",
     "text": "Contributors\n\nEdward Lau, PhD - ed-lau\nMaggie Lam, PhD - Maggie-Lam"
   },
   {
     "objectID": "index.html#citations",
     "href": "index.html#citations",
-    "title": "pyTMT - Python Tandem Mass Tag Quantifier",
+    "title": "pyTMT - Tandem Mass Tag Quantifier",
     "section": "Citations",
     "text": "Citations\n\nProteomic signatures of acute oxidative stress response to paraquat in the mouse heart. Dostal V, Wood SD, Thomas CT, Han Y, Lau E, Lam MPY. Scientific Reports 10, 18440 (2020) doi: 10.1038/s41598-020-75505-8"
   },
