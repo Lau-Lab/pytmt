@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 """ Reads in crux/percolator tab-delimited results (psms) and returns tmt values"""
 
 import os.path
@@ -16,7 +15,8 @@ from pytmt import tmt_reporters
 from pytmt import quantify_spec
 from pytmt import correct_matrix
 
-def quant(args):
+
+def quant(args) -> None:
     """
      reads in Percolator tab-delimited results (PSMS) \\
      and filter each row by protein-uniqueness and by Percolator q value \\
@@ -302,7 +302,8 @@ def quant(args):
     final_df.to_csv(save_path, sep='\t')
 
     main_log.info("Run completed successfully.")
-    return sys.exit(os.EX_OK)
+
+    return None #sys.exit(os.EX_OK)
 
 
 def main():
