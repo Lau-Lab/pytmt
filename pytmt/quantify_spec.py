@@ -4,7 +4,12 @@
 """ Given a spectrum, precision, and list of reporters, get reporter intensity values """
 
 
-def quantify_reporters(idx, scan, spectrum, precision, reporters, digits):
+def quantify_reporters(idx,
+                       scan,
+                       spectrum,
+                       precision,
+                       reporters,
+                       digits):
     """
 
     :param idx: file index, for reporting only

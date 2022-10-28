@@ -7,7 +7,7 @@ import sys
 import re
 import pandas as pd
 import tqdm
-import logging
+import argparse
 
 from pytmt import __version__
 from pytmt.get_spec import Mzml
@@ -15,6 +15,8 @@ from pytmt import tmt_reporters
 from pytmt import quantify_spec
 from pytmt import correct_matrix
 
+from pytmt.logger import get_logger
+logger = get_logger(__name__)
 
 def quant(args) -> None:
     """
@@ -54,30 +56,9 @@ def quant(args) -> None:
     :return:        Exit OK
     """
 
-    # Main logger setup
-    main_log = logging.getLogger('pytmt')
-    main_log.setLevel(logging.DEBUG)
-
-    # create file handler which logs even debug messages
-    os.makedirs(args.out, exist_ok=True)
-    fh = logging.FileHandler(os.path.join(args.out, 'tmt.log'))
-    fh.setLevel(logging.DEBUG)
-
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-
-    # add the handlers to the logger
-    main_log.addHandler(fh)
-    main_log.addHandler(ch)
-
-    main_log.info(args)
-    main_log.info(__version__)
+    # ---- Get the logger ----
+    logger.info(args)
+    logger.info(__version__)
 
     # Folders of mzML files and the Percolator results.
     mzml_loc = args.mzml
@@ -99,7 +80,7 @@ def quant(args) -> None:
     unique_only = args.unique
 
     assert os.path.isdir(mzml_loc), '[error] mzml directory path not valid'
-    assert os.path.isfile(id_loc), '[error] percolator file path not valid'
+    assert os.path.isfile(id_loc.name), '[error] percolator file path not valid'
 
     # List all files in the percolator directory ending with target.psms.txt.
         # id_files = [f for f in os.listdir(id_loc) if f.endswith('target.psms.txt')]
@@ -110,7 +91,7 @@ def quant(args) -> None:
         id_df = pd.read_csv(filepath_or_buffer=id_loc,  # os.path.join(id_loc, id_files[0]),
                             sep='\t')
     except pd.errors.ParserError:
-        main_log.info("Pandas ParserError: trying readlines for possible standalone Percolator file")
+        logger.info("Pandas ParserError: trying readlines for possible standalone Percolator file")
 
         with open(id_loc, 'r') as f:
             f_ln = f.readlines()
@@ -147,11 +128,11 @@ def quant(args) -> None:
     file_indices = list(set(id_df['file_idx']))
 
     # 2022-03-28 pytmt will now attempt to read the percolator.log.txt file for fraction (file_idx) mzML assignment
-    log_path = os.path.join(os.path.dirname(id_loc), 'percolator.log.txt')
+    log_path = os.path.join(os.path.dirname(id_loc.name), 'percolator.log.txt')
 
     # If the log file exists, use it to read the assignment
     if os.path.exists(log_path):
-        main_log.warning(f'Percolator log file exists at {log_path} and will be used for index assignment.')
+        logger.warning(f'Percolator log file exists at {log_path} and will be used for index assignment.')
 
         with open(log_path, 'r') as f:
             lines = f.readlines()
@@ -167,7 +148,7 @@ def quant(args) -> None:
 
     # If the log file does not exist, assign index naively based on sort
     else:
-        main_log.warning(f'Percolator log file not found at {log_path}; '
+        logger.warning(f'Percolator log file not found at {log_path}; '
                          f'mzml files will be sorted for index assignment.')
         # Check that the number of mzMLs in the mzML folder is the same as the maximum of the ID file's file_idx column.
         # Note this will throw an error if not every fraction results in at least some ID, but we will ignore for now.
@@ -188,7 +169,7 @@ def quant(args) -> None:
         assert len(mzml_files) == max(file_indices) + 1, '[error] number of mzml files not matching id list'
 
     # Print mzml files to log
-    main_log.info(f'mzml file orders: {mzml_files}')
+    logger.info(f'mzml file orders: {mzml_files}')
 
     # For each file index (fraction), open the mzML file, and create a subset Percolator ID dataframe
     for idx in file_indices:
@@ -203,7 +184,7 @@ def quant(args) -> None:
             raise FileNotFoundError
 
         # Logging mzML
-        main_log.info(f'Reading mzml file: {os.path.basename(mzml_path)} ({idx + 1} of {len(file_indices)})')
+        logger.info(f'Reading mzml file: {os.path.basename(mzml_path)} ({idx + 1} of {len(file_indices)})')
 
         # Make a subset dataframe with the current file index (fraction) being considered
         fraction_id_df = id_df[id_df['file_idx'] == idx]
@@ -236,12 +217,12 @@ def quant(args) -> None:
 
                 # Tidy this up
                 if spectrum is None:
-                    main_log.error(f'[error] spectrum index {scan} out of bound or is empty')
+                    logger.error(f'[error] spectrum index {scan} out of bound or is empty')
                     raise KeyError
 
             # TODO: This doesn't give a KeyError currently. Need to catch when the id scans don't match the mzml.
             except KeyError:
-                main_log.error('[error] spectrum index out of bound')
+                logger.error('[error] spectrum index out of bound')
                 continue
 
 
@@ -280,8 +261,6 @@ def quant(args) -> None:
     for reporter in reporters:
         output_df_columns.append('m' + str(reporter))
 
-
-
     output_df_columns.append('spectrum_int')
     output_df = pd.DataFrame(output_list, columns=output_df_columns)
 
@@ -301,9 +280,21 @@ def quant(args) -> None:
     # Save the file
     final_df.to_csv(save_path, sep='\t')
 
-    main_log.info("Run completed successfully.")
+    logger.info("Run completed successfully.")
 
     return None #sys.exit(os.EX_OK)
+
+
+class CheckReadableDir(argparse.Action):
+    """ Class to check if directory is readable. """
+    def __call__(self, parser, namespace, values, option_string=None):
+        prospective_dir=values
+        if not os.path.isdir(prospective_dir):
+            raise argparse.ArgumentTypeError("readable_dir:{0} is not a valid path".format(prospective_dir))
+        if os.access(prospective_dir, os.R_OK):
+            setattr(namespace,self.dest,prospective_dir)
+        else:
+            raise argparse.ArgumentTypeError("readable_dir:{0} is not a readable dir".format(prospective_dir))
 
 
 def main():
@@ -313,18 +304,24 @@ def main():
     :return:
     """
 
-    import argparse
 
     parser = argparse.ArgumentParser(description='pytmt returns ms2 tmt quantification values'
                                                  'from Percolator output and perform contamination'
-                                                 'correction')
+                                                 'correction',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                     epilog='For more information, see GitHub repository at '
+                                            'https://github.com/ed-lau/pytmt',
+                                     )
 
     parser.add_argument('mzml',
-                        help='path to folder containing mzml files',
+                        help='<required> path to folder containing mzml files',
+                        type=str,
+                        action=CheckReadableDir,
                         )
 
     parser.add_argument('id',
-                        help='path to percolator target psms output file',
+                        help='<required> path to percolator target psms output file',
+                        type=argparse.FileType('r'),
                         )
 
     parser.add_argument('-u',
@@ -340,6 +337,7 @@ def main():
 
     parser.add_argument('-m', '--multiplex',
                         help='TMT-plex (0, 2, 6, 10, 11, 16, 18) [default:10]',
+                        choices=[0, 2, 6, 10, 11, 16, 18],
                         type=int,
                         default=10)
 
@@ -350,9 +348,6 @@ def main():
 
     parser.add_argument('-o', '--out', help='name of the output directory [default: tmt_out]',
                         default='tmt_out')
-
-    parser.add_argument('-v', '--version', action='version',
-                        version='%(prog)s {version}'.format(version=__version__))
 
     parser.add_argument('-c', '--contam',
                         help='Path to contaminant matrix csv file.'
@@ -366,6 +361,9 @@ def main():
                         help='uses non-negative least square for contamination correction',
                         )
 
+    parser.add_argument('-v', '--version', action='version',
+                        version='pyTMT {version}'.format(version=__version__))
+
     parser.set_defaults(func=quant)
 
 
@@ -377,6 +375,9 @@ def main():
 
     # Parse all the arguments
     args = parser.parse_args()
+
+    # Convert args to a dictionary
+    # args_dict = vars(args)
 
     # Run the function in the argument
     args.func(args)
