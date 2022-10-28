@@ -1,3 +1,8 @@
+v.0.4.2
+---
+* Added support to collapse individual peptide TMT intensities into protein TMT intensities
+* Added support for parsimony options in collapsing proteins
+
 v.0.4.1
 ---
 * Added support for TMT 18-plex

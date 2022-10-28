@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 
 """ Main. """
-
+import os
 import logging
 
 
-def get_logger(name: str) -> logging.Logger:
-    """ Get logger. """
+def get_logger(name: str,
+               out_path: str) -> logging.Logger:
+    """
+
+    :param name: Name of the logger
+    :param out_path: Where to write the logfile
+    :return:
+    """
 
     file_formatter = logging.Formatter('%(asctime)s~%(levelname)s~%(message)s~module:%(module)s~function:%(module)s')
     console_formatter = logging.Formatter('%(levelname)s -- %(message)s')
 
-    file_handler = logging.FileHandler("logfile.log")
+    file_handler = logging.FileHandler(os.path.join(out_path, "logfile.log"))
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(file_formatter)
 

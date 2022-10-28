@@ -16,7 +16,7 @@ from pytmt import quantify_spec
 from pytmt import correct_matrix
 
 from pytmt.logger import get_logger
-logger = get_logger(__name__)
+
 
 def quant(args) -> None:
     """
@@ -46,41 +46,31 @@ def quant(args) -> None:
         pytmt tests/data/mzml tests/data/percolator/percolator.target.psms.txt -o out
 
     Example values for arguments:
-        mzml_loc = 'tests/data/mzml'
-        id_loc = 'tests/data/percolator'
+        mzml = 'tests/data/mzml'
+        id = 'tests/data/percolator'
         precision = 10
-        q_filter = 0.1
-        unique_only = True
+        qvalue = 0.1
 
     :param args:    arguments from argparse
     :return:        Exit OK
     """
 
     # ---- Get the logger ----
+    logger = get_logger(__name__, args.out)
     logger.info(args)
     logger.info(__version__)
-
-    # Folders of mzML files and the Percolator results.
-    mzml_loc = args.mzml
-    id_loc = args.id
-
-    assert args.multiplex in [0, 2, 6, 10, 11, 16, 18], '[error] TMT multiplexity not 0, 2, 6, 10, 11, 16, or 18'
 
     # Get the reporter masses
     reporters = tmt_reporters.get_reporters(args.multiplex)
 
     # Define the PPM of integration
     precision = args.precision
-    assert 1 <= precision <= 1000, '[error] mass tolerance must be between 1 and 1000 ppm'
 
     # Define the Percolator Q value cutoff filter
     q_filter = args.qvalue
 
-    # Define the Percolator protein-unique PSM filter
-    unique_only = args.unique
-
-    assert os.path.isdir(mzml_loc), '[error] mzml directory path not valid'
-    assert os.path.isfile(id_loc.name), '[error] percolator file path not valid'
+    assert os.path.isdir(args.mzml), '[error] mzml directory path not valid'
+    assert os.path.isfile(args.id.name), '[error] percolator file path not valid'
 
     # List all files in the percolator directory ending with target.psms.txt.
         # id_files = [f for f in os.listdir(id_loc) if f.endswith('target.psms.txt')]
@@ -88,12 +78,17 @@ def quant(args) -> None:
 
     # Read the Percolator psms file.
     try:
-        id_df = pd.read_csv(filepath_or_buffer=id_loc,  # os.path.join(id_loc, id_files[0]),
+        id_df = pd.read_csv(filepath_or_buffer=args.id,  # os.path.join(id_loc, id_files[0]),
                             sep='\t')
+
+    except pd.errors.EmptyDataError:
+        logger.error('Percolator file is empty')
+        sys.exit(1)
+
     except pd.errors.ParserError:
         logger.info("Pandas ParserError: trying readlines for possible standalone Percolator file")
 
-        with open(id_loc, 'r') as f:
+        with open(args.id, 'r') as f:
             f_ln = f.readlines()
 
         # The percolator output has different number of columns per row because the proteins are separated by tabs
@@ -128,7 +123,7 @@ def quant(args) -> None:
     file_indices = list(set(id_df['file_idx']))
 
     # 2022-03-28 pytmt will now attempt to read the percolator.log.txt file for fraction (file_idx) mzML assignment
-    log_path = os.path.join(os.path.dirname(id_loc.name), 'percolator.log.txt')
+    log_path = os.path.join(os.path.dirname(args.id.name), 'percolator.log.txt')
 
     # If the log file exists, use it to read the assignment
     if os.path.exists(log_path):
@@ -153,7 +148,7 @@ def quant(args) -> None:
         # Check that the number of mzMLs in the mzML folder is the same as the maximum of the ID file's file_idx column.
         # Note this will throw an error if not every fraction results in at least some ID, but we will ignore for now.
 
-        mzml_filelist = [f for f in os.listdir(mzml_loc) if re.match('^.*.mzML', f)]
+        mzml_filelist = [f for f in os.listdir(args.mzml) if re.match('^.*.mzML', f)]
         # Sort the mzML files by names
         # Note this may create a problem if the OS Percolator runs on has natural sorting (xxxx_2 before xxxx_10)
         # But we will ignore for now
@@ -175,13 +170,12 @@ def quant(args) -> None:
     for idx in file_indices:
 
         # 2022-03-28 try to open either mzML or mzML.gz
-        # TODO: may have to account for .mzml and mzml.gz rather than .mzML
-        if os.path.exists(os.path.join(mzml_loc, mzml_files[idx] + '.mzML')):
-            mzml_path = os.path.join(mzml_loc, mzml_files[idx] + '.mzML')
-        elif os.path.exists(os.path.join(mzml_loc, mzml_files[idx] + '.mzML.gz')):
-            mzml_path = os.path.join(mzml_loc, mzml_files[idx] + '.mzML.gz')
+        if os.path.exists(os.path.join(args.mzml, mzml_files[idx] + '.mzML')):
+            mzml_path = os.path.join(args.mzml, mzml_files[idx] + '.mzML')
+        elif os.path.exists(os.path.join(args.mzml, mzml_files[idx] + '.mzML.gz')):
+            mzml_path = os.path.join(args.mzml, mzml_files[idx] + '.mzML.gz')
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Could not find mzML file for index {idx} at {args.mzml}')
 
         # Logging mzML
         logger.info(f'Reading mzml file: {os.path.basename(mzml_path)} ({idx + 1} of {len(file_indices)})')
@@ -194,7 +188,9 @@ def quant(args) -> None:
 
         # Open the mzML file
         fraction_mzml = Mzml(path=mzml_path,
-                             precision=precision)
+                             precision=precision,
+                             logger=logger,
+                             )
         fraction_mzml.parse_mzml_ms2()
 
         # Loop through each qualifying row in sub_df_filtered
@@ -207,8 +203,8 @@ def quant(args) -> None:
             if fraction_id_df.loc[i, 'percolator q-value'] > q_filter:
                 continue
 
-            # If the protein-unique PSM filter is on, skip any row that fails the filter.
-            if unique_only and len(fraction_id_df.loc[i, 'protein id'].split(',')) > 1:
+            # If the parsimony setting is set to unique, skip any row that fails the filter.
+            if args.parsimony == 'unique' and len(fraction_id_df.loc[i, 'protein id'].split(',')) > 1:
                 continue
 
             # If this is a qualifying row, get the spectrum in the mzML file by scan number
@@ -224,9 +220,6 @@ def quant(args) -> None:
             except KeyError:
                 logger.error('[error] spectrum index out of bound')
                 continue
-
-
-
 
             #except xml.etree.ElementTree.ParseError:
             #    if args.verbosity == 2:
@@ -246,7 +239,8 @@ def quant(args) -> None:
                                                                spectrum=spectrum,
                                                                precision=precision,
                                                                reporters=reporters,
-                                                               digits=2)
+                                                               digits=2,
+                                                               )
 
             # Grow the results into an output list of lists (creating if does not exist)
             try:
@@ -274,11 +268,46 @@ def quant(args) -> None:
     # Final output, merging the input and output tables
     final_df = pd.merge(id_df, output_df, how='left')
 
-    # Create output directory if it does not exist
-    save_path = os.path.join(args.out, 'tmt_out.txt')
+    # Label light and heavy peptides
+    if args.silac:
+        heavy_mods = ["R\\[10.01\\]", "R\\[239.17\\]", "K\\[8.01\\]", "K\\[237.18\\]"]
+        heavy = "|".join(heavy_mods)
 
-    # Save the file
-    final_df.to_csv(save_path, sep='\t')
+        def add_heavy_tag(string: str) -> str:
+            """ add _H to the end of each uniprot accession """
+            return re.sub("(sp\\|)(.+)(\\|.*$)", "\\1\\2_H\\3", str)
+
+        # Add _H to protein names if the peptide is heavy (contains the heavy tag)
+        final_df['protein id'] = [",".join(map(add_heavy_tag, final_df['protein id'][1].split(',')))
+                                  if bool(re.search(heavy, final_df['sequence'][i]))
+                                  else final_df['protein id'][i]
+                                  for i in range(len(final_df.index))]
+
+    # Save the peptide file
+    final_df.to_csv(os.path.join(args.out, 'tmt_out.txt'), sep='\t')
+
+    # Collapse to protein level
+    if args.contam is not None:
+        protein_column_list = ['protein id', ] + [f'm{reporter}_cor' for reporter in reporters]
+    else:
+        protein_column_list = ['protein id'] + [f'm{reporter}' for reporter in reporters]
+
+    protein_df = final_df[protein_column_list]
+
+    # Sum the reporter intensities for each protein
+    if args.parsimony == 'unique':
+        filtered_protein_df = protein_df[protein_df['protein id'].str.count(',') == 0]
+
+    elif args.parsimony == 'all':
+        filtered_protein_df = protein_df
+
+    else:
+        filtered_protein_df = protein_df  # placeholder
+
+    filtered_protein_df = filtered_protein_df.groupby('protein id').sum()
+
+    # Save the protein file
+    filtered_protein_df.to_csv(os.path.join(args.out, 'tmt_protein_out.txt'), sep='\t')
 
     logger.info("Run completed successfully.")
 
@@ -288,22 +317,34 @@ def quant(args) -> None:
 class CheckReadableDir(argparse.Action):
     """ Class to check if directory is readable. """
     def __call__(self, parser, namespace, values, option_string=None):
-        prospective_dir=values
+        prospective_dir = values
         if not os.path.isdir(prospective_dir):
             raise argparse.ArgumentTypeError("readable_dir:{0} is not a valid path".format(prospective_dir))
         if os.access(prospective_dir, os.R_OK):
-            setattr(namespace,self.dest,prospective_dir)
+            setattr(namespace, self.dest, prospective_dir)
         else:
             raise argparse.ArgumentTypeError("readable_dir:{0} is not a readable dir".format(prospective_dir))
 
 
-def main():
+class CheckQValue(argparse.Action):
+    """ Class to check that q values are between 0 and 1. """
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            values = float(values)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%r for q_value not a floating-point literal" % (values,))
+
+        if values < 0.0 or values > 1.0:
+            raise argparse.ArgumentTypeError("%r for q_value not in range [0.0, 1.0]" % (values,))
+        setattr(namespace, self.dest, values)
+
+
+def main() -> None:
     """
     Entry point
 
     :return:
     """
-
 
     parser = argparse.ArgumentParser(description='pytmt returns ms2 tmt quantification values'
                                                  'from Percolator output and perform contamination'
@@ -324,16 +365,22 @@ def main():
                         type=argparse.FileType('r'),
                         )
 
-    parser.add_argument('-u',
-                        '--unique',
-                        action='store_true',
-                        help='quantify unique peptides only',
+    parser.add_argument('-P', '--parsimony',
+                        help='rule to collapse peptides into the protein level. '
+                        'options: "all" (default; include all peptides), "unique"'
+                             ' (only unique peptides), "canonical" (collapse'
+                             'into parsimony groups).',
+                        choices=['all', 'unique', 'canonical'],
+                        default='all',
                         )
 
     parser.add_argument('-q', '--qvalue',
                         help='quantify peptides with q value below this threshold [default: 1.0]',
+                        metavar='[0, 1]',
                         type=float,
-                        default=1.0)
+                        default=1.0,
+                        action=CheckQValue,
+                        )
 
     parser.add_argument('-m', '--multiplex',
                         help='TMT-plex (0, 2, 6, 10, 11, 16, 18) [default:10]',
@@ -344,6 +391,8 @@ def main():
     parser.add_argument('-p', '--precision',
                         help='ms2 spectrum mass shift tolerance in ppm [default: 10]',
                         type=int,
+                        choices=[0, 100],
+                        metavar='[0, 100]',
                         default=10)
 
     parser.add_argument('-o', '--out', help='name of the output directory [default: tmt_out]',
@@ -352,13 +401,17 @@ def main():
     parser.add_argument('-c', '--contam',
                         help='Path to contaminant matrix csv file.'
                              ' Leave blank to get tmt output without correction',
-                        metavar='CONTAM',
                         type=argparse.FileType('r'),
                         )
 
     parser.add_argument('-n', '--nnls',
                         action='store_true',
                         help='uses non-negative least square for contamination correction',
+                        )
+
+    parser.add_argument('-S', '--silac',
+                        help='mark peptides with SILAC reporter ions',
+                        action='store_true',
                         )
 
     parser.add_argument('-v', '--version', action='version',
@@ -381,3 +434,9 @@ def main():
 
     # Run the function in the argument
     args.func(args)
+
+    return None #sys.exit(os.EX_OK)
+
+
+if __name__ == '__main__':
+    main()

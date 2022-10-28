@@ -4,30 +4,30 @@
 
 import logging
 import pymzml as mz
-from pytmt.logger import get_logger
-
-logger = get_logger(__name__)
 
 
 class Mzml(object):
+    """ Mzml class. """
 
     def __init__(
             self,
             path: str,
-            precision
+            precision: int = 20,
+            logger: logging.Logger = None,
     ) -> None:
         """
         This class reads mzml files using pymzml
 
         :param path: path of the mzml file to be loaded, e.g., "~/Desktop/example.mzml"
-        :param precision: integer determines precision of reading as well as mass tolerance of peak integration (ppm)
+        :param precision: Int determines precision of reading as well as mass tolerance of peak integration (ppm)
         """
 
-        self.path = path
-        self.msdata = {}
-        self.rt_idx = {}
-        self.mslvl_idx = {}
-        self.precision = precision
+        self.path = path    # path of the mzml file to be loaded, e.g., "~/Desktop/example.mzml"
+        self.msdata = {}    # dictionary of ms2 spectra
+        self.rt_idx = {}    # dictionary of retention times
+        self.mslvl_idx = {} # dictionary of ms levels
+        self.precision = precision  # integer determines precision of reading as well as mass tolerance of peak integration (ppm)
+        self.logger = logger if logger else logging.getLogger(__name__)     # logger
 
     def parse_mzml_ms2(self) -> None:
         """
@@ -57,7 +57,7 @@ class Mzml(object):
             if spec.ms_level == 2:
                 self.msdata[n + 1] = spec.peaks("centroided")
 
-        logger.info(f'Parsed {n + 1} spectra from file {self.path}')
+        self.logger.info(f'Parsed {n + 1} spectra from file {self.path}')
 
         return None
 
