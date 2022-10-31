@@ -16,7 +16,7 @@ from pytmt import quantify_spec
 from pytmt import correct_matrix
 
 from pytmt.logger import get_logger
-
+from pytmt.protein_group import get_canonical_parsimony_groups
 
 def quant(args) -> None:
     """
@@ -65,9 +65,6 @@ def quant(args) -> None:
 
     # Define the PPM of integration
     precision = args.precision
-
-    # Define the Percolator Q value cutoff filter
-    q_filter = args.qvalue
 
     assert os.path.isdir(args.mzml), '[error] mzml directory path not valid'
     assert os.path.isfile(args.id.name), '[error] percolator file path not valid'
@@ -200,7 +197,7 @@ def quant(args) -> None:
             scan = fraction_id_df.loc[i, 'scan']
 
             # If q-value filter is on, skip any row that fails the filter.
-            if fraction_id_df.loc[i, 'percolator q-value'] > q_filter:
+            if fraction_id_df.loc[i, 'percolator q-value'] > args.qvalue:
                 continue
 
             # If the parsimony setting is set to unique, skip any row that fails the filter.
@@ -270,15 +267,15 @@ def quant(args) -> None:
 
     # Label light and heavy peptides
     if args.silac:
-        heavy_mods = ["R\\[10.01\\]", "R\\[239.17\\]", "K\\[8.01\\]", "K\\[237.18\\]"]
+        heavy_mods = ["R\\[10.01\\]", "R\\[239.17\\]", "K\\[8.01\\]", "K\\[237.18\\]", "K\\[466.34\\]"]
         heavy = "|".join(heavy_mods)
 
         def add_heavy_tag(string: str) -> str:
             """ add _H to the end of each uniprot accession """
-            return re.sub("(sp\\|)(.+)(\\|.*$)", "\\1\\2_H\\3", str)
+            return re.sub("(sp\\|)(.+)(\\|.*$)", "\\1\\2_H\\3", string)
 
         # Add _H to protein names if the peptide is heavy (contains the heavy tag)
-        final_df['protein id'] = [",".join(map(add_heavy_tag, final_df['protein id'][1].split(',')))
+        final_df['protein id'] = [",".join(map(add_heavy_tag, final_df['protein id'][i].split(',')))
                                   if bool(re.search(heavy, final_df['sequence'][i]))
                                   else final_df['protein id'][i]
                                   for i in range(len(final_df.index))]
@@ -301,10 +298,17 @@ def quant(args) -> None:
     elif args.parsimony == 'all':
         filtered_protein_df = protein_df
 
-    else:
-        filtered_protein_df = protein_df  # placeholder
+    elif args.parsimony == 'canonical':
+        filtered_protein_df = get_canonical_parsimony_groups(result_df = protein_df,
+                                                             contam=args.contam,
+                                                             reporters=reporters,
+                                                             )
 
+    # Group by protein and sum the reporter intensities
     filtered_protein_df = filtered_protein_df.groupby('protein id').sum()
+
+    # Remove any rows that are all zeros
+    filtered_protein_df = filtered_protein_df[filtered_protein_df.sum(axis=1) > 0]
 
     # Save the protein file
     filtered_protein_df.to_csv(os.path.join(args.out, 'tmt_protein_out.txt'), sep='\t')

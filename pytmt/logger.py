@@ -8,7 +8,7 @@ import logging
 def get_logger(name: str,
                out_path: str) -> logging.Logger:
     """
-
+    Get logger.
     :param name: Name of the logger
     :param out_path: Where to write the logfile
     :return:

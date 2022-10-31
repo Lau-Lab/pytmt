@@ -1,7 +1,8 @@
 v.0.4.2
 ---
-* Added support to collapse individual peptide TMT intensities into protein TMT intensities
-* Added support for parsimony options in collapsing proteins
+* Added function to collapse individual peptide TMT intensities into protein TMT intensities
+* Added options to determining parsimony groups in collapsing peptide data into proteins
+* Added option to separate proteins into light and heavy groups based on SILAC labels
 
 v.0.4.1
 ---
