@@ -3,6 +3,7 @@ v.0.4.2
 * Added function to collapse individual peptide TMT intensities into protein TMT intensities
 * Added options to determining parsimony groups in collapsing peptide data into proteins
 * Added option to separate proteins into light and heavy groups based on SILAC labels
+* Patching standalone percolator
 
 v.0.4.1
 ---

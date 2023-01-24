@@ -79,17 +79,20 @@ def quant(args) -> None:
                             sep='\t')
 
     except pd.errors.EmptyDataError:
-        logger.error('Percolator file is empty')
+        logger.error('Unable to read percolator')
         sys.exit(1)
 
-    except pd.errors.ParserError:
-        logger.info("Pandas ParserError: trying readlines for possible standalone Percolator file")
+    try:
+        id_df['file_idx']
 
-        with open(args.id, 'r') as f:
+    except KeyError:
+        logger.info("Unable to find file_idx, attempting to read as standalone Percolator file")
+
+        # The standalone percolator output has different number of columns per row because the proteins are separated by tabs
+        # Read the first half of the table without the protein IDs
+        with open(args.id.name, 'r') as f:
             f_ln = f.readlines()
 
-        # The percolator output has different number of columns per row because the proteins are separated by tabs
-        # Read the first half of the table without the protein IDs
         id_df = pd.DataFrame([ln.split('\t')[0:5] for ln in f_ln[1:]])
         id_df.columns = ['PSMId', 'score', 'percolator q-value', 'posterior_error_prob', 'peptide']
         id_df['percolator q-value'] = id_df['percolator q-value'].astype(float)
