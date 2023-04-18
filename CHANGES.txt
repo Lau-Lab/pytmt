@@ -1,3 +1,8 @@
+v.0.4.3
+---
+* Minor bug fix
+* Corrected standalone mass for TMT 16-plex 133C
+
 v.0.4.2
 ---
 * Added function to collapse individual peptide TMT intensities into protein TMT intensities

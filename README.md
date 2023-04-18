@@ -1,4 +1,4 @@
-# pyTMT v0.4.2
+# pyTMT v0.4.3
 
 pyTMT returns ms2 tandem mass tag quantification values from Crux/Percolator output.
 

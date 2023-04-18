@@ -4,7 +4,7 @@
     "href": "change.html",
     "title": "Change Log",
     "section": "",
-    "text": "v.0.4.0\n\npyTMT now supports TMT contaminant correction.\nAdded support for TMT 16-plex\n\n\n\nv.0.3.5\n\npyTMT now reads the percolator output log file from crux to assign mzML files to Percolator file_idx\nWhen no log file is present, pyTMT falls back on the old method of ordering mzML files by file names\n\n\n\nv.0.2.8\n\ninput changed from specifying percolator directory to percolator file path\nadded preliminary support for standalone percolator output (psms)"
+    "text": "v.0.4.2\n\nAdded function to collapse individual peptide TMT intensities into protein TMT intensities\nAdded options to determining parsimony groups in collapsing peptide data into proteins\nAdded option to separate proteins into light and heavy groups based on SILAC labels\nPatching standalone percolator\n\n\n\nv.0.4.1\n\nAdded support for TMT 18-plex\nAdded non-negative least square method for contamination correction\n\n\n\nv.0.4.0\n\npyTMT now supports TMT contaminant correction.\nAdded support for TMT 16-plex\n\n\n\nv.0.3.5\n\npyTMT now reads the percolator output log file from crux to assign mzML files to Percolator file_idx\nWhen no log file is present, pyTMT falls back on the old method of ordering mzML files by file names\n\n\n\nv.0.2.8\n\ninput changed from specifying percolator directory to percolator file path\nadded preliminary support for standalone percolator output (psms)"
   },
   {
     "objectID": "index.html",
@@ -25,7 +25,7 @@
     "href": "index.html#downloads",
     "title": "pyTMT - Tandem Mass Tag Quantifier",
     "section": "Downloads",
-    "text": "Downloads\n\n\nLatest Updates\nv.0.4.1\n\n\nAdded support for TMT 18-plex\nAdded non-negative least square method for contamination correction\n\n\nSee Change Log for details.\n\nThe latest version and source code of pyTMT can be found on github: https://github.com/Lau-Lab/pytmt.\nSee the Documentation page for instructions."
+    "text": "Downloads\n\n\nLatest Updates\nv.0.4.3\n\n\nCorrected standalone mass for TMT 16-plex 133C\n\n\nSee Change Log for details.\n\nThe latest version and source code of pyTMT can be found on github: https://github.com/Lau-Lab/pytmt.\nSee the Documentation page for instructions."
   },
   {
     "objectID": "index.html#contributors",
