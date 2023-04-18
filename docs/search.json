@@ -25,7 +25,7 @@
     "href": "index.html#downloads",
     "title": "pyTMT - Tandem Mass Tag Quantifier",
     "section": "Downloads",
-    "text": "Downloads\n\n\nLatest Updates\nv.0.4.1\n\n\nAdded support for TMT 18-plex\nAdded non-negative least square method for contamination correction\n\n\nSee Change Log for details.\n\nThe latest version and source code of JCAST can be found on github: https://github.com/Lau-Lab/pytmt.\nSee the Documentation page for instructions."
+    "text": "Downloads\n\n\nLatest Updates\nv.0.4.1\n\n\nAdded support for TMT 18-plex\nAdded non-negative least square method for contamination correction\n\n\nSee Change Log for details.\n\nThe latest version and source code of pyTMT can be found on github: https://github.com/Lau-Lab/pytmt.\nSee the Documentation page for instructions."
   },
   {
     "objectID": "index.html#contributors",
