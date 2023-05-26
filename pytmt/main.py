@@ -18,7 +18,7 @@ from pytmt import correct_matrix
 from pytmt.logger import get_logger
 from pytmt.protein_group import get_canonical_parsimony_groups
 
-def quant(args) -> None:
+def quant(args: argparse.Namespace) -> None:
     """
      reads in Percolator tab-delimited results (PSMS) \\
      and filter each row by protein-uniqueness and by Percolator q value \\

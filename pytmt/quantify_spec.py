@@ -4,12 +4,12 @@
 """ Given a spectrum, precision, and list of reporters, get reporter intensity values """
 
 
-def quantify_reporters(idx,
-                       scan,
-                       spectrum,
-                       precision,
-                       reporters,
-                       digits):
+def quantify_reporters(idx: int,
+                       scan: int,
+                       spectrum: list,
+                       precision: int,
+                       reporters: list,
+                       digits: int = 2) -> list
     """
 
     :param idx: file index, for reporting only
@@ -31,7 +31,7 @@ def quantify_reporters(idx,
         try:
             reporter_intensity = sum([I for mz_value, I in spectrum if upper > mz_value > lower])
         except TypeError:
-            reporter_intensity = 0
+            reporter_intensity = 0.0
 
         tmt_intensities.append(round(reporter_intensity, digits))
 

@@ -60,4 +60,3 @@ class Mzml(object):
         self.logger.info(f'Parsed {n + 1} spectra from file {self.path}')
 
         return None
-
