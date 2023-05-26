@@ -15,10 +15,10 @@ def correct_matrix(output_df: pd.DataFrame,
                    ) -> pd.DataFrame:
     """
 
-    :param output_df:  TMT intensity output matrix, with file_idx,  scan, m..., spectrum_int as columns
-    :param contam:     File handle to the contaminant matrix
-    :param nnls:      Bool: uses non-negative least square for correction
-    :return:           od.Dataframe with Corrected TMT intensity output dataframe with additional columns
+    :param output_df:   TMT intensity output matrix, with file_idx,  scan, m..., spectrum_int as columns
+    :param contam:      File handle to the contaminant matrix
+    :param nnls:        Bool: uses non-negative least square for correction
+    :return:            pd.Dataframe with Corrected TMT intensity output dataframe with additional columns
 
     """
     # Read the contaminant matrix
