@@ -9,7 +9,7 @@ def quantify_reporters(idx: int,
                        spectrum: list,
                        precision: int,
                        reporters: list,
-                       digits: int = 2) -> list
+                       digits: int = 2) -> list:
     """
 
     :param idx: file index, for reporting only
