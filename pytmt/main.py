@@ -82,10 +82,19 @@ def quant(args: argparse.Namespace) -> None:
         logger.error('Unable to read percolator')
         sys.exit(1)
 
-    try:
-        id_df['file_idx']
+    # Check if the file is from standalone percolator or not
+    except pd.errors.ParserError:
+        is_standalone = True
 
-    except KeyError:
+    # If there is no file_idx column, then this is a standalone percolator file
+    if not is_standalone:
+        try:
+            id_df['file_idx']
+
+        except KeyError:
+            is_standalone = True
+
+    if is_standalone:
         logger.info("Unable to find file_idx, attempting to read as standalone Percolator file")
 
         # The standalone percolator output has different number of columns per row because the proteins are separated by tabs
@@ -105,14 +114,19 @@ def quant(args: argparse.Namespace) -> None:
         id_df['protein id'] = [','.join(ln.rstrip().split('\t')[5:]) for ln in f_ln[1:]]
 
         # Split the PSMId column to create file_idx, scan, and charge.
-        id_df['charge'] = [psm.split('_')[-2] for psm in id_df['PSMId']]
+        # 2023-08-07 This now takes only the MSFragger output format which is in the format filename.scan.scan.charge_index
+        id_df['charge'] = [psm.split('.')[-1] for psm in id_df['PSMId']]
+        id_df['charge'] = [psm.split('_')[-2] for psm in id_df['charge']]
         id_df['charge'] = id_df['charge'].astype(int)
-        id_df['scan'] = [psm.split('_')[-3] for psm in id_df['PSMId']]
+        id_df['scan'] = [psm.split('.')[-2] for psm in id_df['PSMId']]
         id_df['scan'] = id_df['scan'].astype(int)
+        print(id_df['charge'])
+        print(id_df['scan'])
         # The file name is the underscore('_') split until the last 3 parts, then rejoined by underscore
         # in case there are underscores in the filename. We then remove everything
         # We then remove all directories to get base name
-        id_df['file_name'] = [os.path.basename('_'.join(psm.split('_')[:-3])) for psm in id_df['PSMId']]
+        id_df['file_name'] = [os.path.basename('.'.join(psm.split('.')[:-3])) for psm in id_df['PSMId']]
+        print(id_df['file_name'])
 
         # Get the sorted file names, hopefully this is the same index as the Crux Percolator output
         # TODO: Read the Percolator log file to get actual index and use file names to open the mzml instead
