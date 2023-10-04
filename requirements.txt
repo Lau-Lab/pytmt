@@ -1,4 +1,4 @@
 pandas>=1.0.4
-pymzml==2.4.6
+pymzml==2.5.2
 tqdm>=4.46.0
 scipy>=1.0.0

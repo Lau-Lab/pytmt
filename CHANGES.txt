@@ -1,3 +1,9 @@
+v.0.5.0
+---
+* Added support for MS3-based TMT quantification
+* Added additional contaminant matrices for TMT 10-plex and 16-plex
+* pyTMT now uses pymzml v.2.5.2 to read mzML files
+
 v.0.4.3
 ---
 * Minor bug fix

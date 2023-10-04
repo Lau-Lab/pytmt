@@ -1,4 +1,4 @@
-# pyTMT v0.4.3
+# pyTMT v0.5.0
 
 pyTMT returns ms2 tandem mass tag quantification values from Crux/Percolator output.
 
@@ -33,7 +33,7 @@ pyTMT is tested in Python 3.7, and 3.8 and requires the following packages:
 
 ```
 pandas>=1.0.4
-pymzml==2.4.6
+pymzml==2.5.2
 tqdm>=4.46.0
 scipy>=1.4.1
 ```

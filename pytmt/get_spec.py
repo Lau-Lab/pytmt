@@ -23,7 +23,9 @@ class Mzml(object):
         """
 
         self.path = path    # path of the mzml file to be loaded, e.g., "~/Desktop/example.mzml"
-        self.msdata = {}    # dictionary of ms2 spectra
+        self.ms2data = {}    # dictionary of ms2 spectra
+        self.ms3data = {}    # dictionary of ms3 spectra
+        self.prec_idx = {}  # dictionary of precursor scan id
         self.rt_idx = {}    # dictionary of retention times
         self.mslvl_idx = {} # dictionary of ms levels
         self.precision = precision  # integer determines precision of reading as well as mass tolerance of peak integration (ppm)
@@ -35,27 +37,29 @@ class Mzml(object):
         :return:
         """
 
-        run = mz.run.Reader(self.path,
-                            MS_precision={
-                                1: self.precision*1e-6,
-                                2: self.precision*1e-6
-                            })
+        run = mz.run.Reader(self.path)
+
+        # 2023-10-04: added ms3 support
+        run.ms_precisions = {1: self.precision * 1e-6,
+                             2: self.precision * 1e-6,
+                             3: self.precision * 1e-6}
+
 
         for n, spec in enumerate(run):
-
-            #if n % 1000 == 0:
-            #    print(
-            #        'Loading spectrum {0} at retention time {scan_time:1.2f}'.format(
-            #           spec.ID,
-            #            scan_time=spec.scan_time
-            #        )
-            #   )
 
             self.mslvl_idx[n + 1] = spec.ms_level
             self.rt_idx[n + 1] = spec.scan_time
 
             if spec.ms_level == 2:
-                self.msdata[n + 1] = spec.peaks("centroided")
+                self.ms2data[n + 1] = spec.peaks("centroided")
+                self.prec_idx[n + 1] = spec.selected_precursors[0].get('precursor id')
+
+            elif spec.ms_level == 3:
+                self.ms3data[n + 1] = spec.peaks("centroided")
+                self.prec_idx[n + 1] = spec.selected_precursors[0].get('precursor id')
+
+            else:
+                continue
 
         self.logger.info(f'Parsed {n + 1} spectra from file {self.path}')
 

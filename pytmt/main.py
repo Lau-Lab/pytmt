@@ -73,7 +73,9 @@ def quant(args: argparse.Namespace) -> None:
         # id_files = [f for f in os.listdir(id_loc) if f.endswith('target.psms.txt')]
         # assert len(id_files) == 1, 'Check percolator output directory has 1 *.target.psms.txt'
 
+
     # Read the Percolator psms file.
+    is_standalone = False
     try:
         id_df = pd.read_csv(filepath_or_buffer=args.id,  # os.path.join(id_loc, id_files[0]),
                             sep='\t')
@@ -83,11 +85,12 @@ def quant(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # Check if the file is from standalone percolator or not
+
     except pd.errors.ParserError:
         is_standalone = True
 
     # If there is no file_idx column, then this is a standalone percolator file
-    if not is_standalone:
+    if is_standalone is False:
         try:
             id_df['file_idx']
 
@@ -206,6 +209,8 @@ def quant(args: argparse.Namespace) -> None:
                              logger=logger,
                              )
         fraction_mzml.parse_mzml_ms2()
+        if fraction_mzml.ms3data != {}:
+            logger.info(f'Found {len(fraction_mzml.ms3data)} MS3 spectra in {os.path.basename(mzml_path)}')
 
         # Loop through each qualifying row in sub_df_filtered
         for i in tqdm.trange(len(fraction_id_df)):
@@ -222,30 +227,37 @@ def quant(args: argparse.Namespace) -> None:
                 continue
 
             # If this is a qualifying row, get the spectrum in the mzML file by scan number
-            try:
-                spectrum = fraction_mzml.msdata.get(scan)
+            # First check if the spectrum's ms3data is empty
+            if fraction_mzml.ms3data == {}:  # if ms3data is empty
+                try:
+                    spectrum = fraction_mzml.ms2data.get(scan)
+                    # Tidy this up
+                    if spectrum is None:
+                        logger.error(f'[error] spectrum index {scan} out of bound or is empty')
+                        raise KeyError
 
-                # Tidy this up
-                if spectrum is None:
-                    logger.error(f'[error] spectrum index {scan} out of bound or is empty')
-                    raise KeyError
+                except KeyError:
+                    logger.error('[error] spectrum index out of bound')
+                    continue
 
-            # TODO: This doesn't give a KeyError currently. Need to catch when the id scans don't match the mzml.
-            except KeyError:
-                logger.error('[error] spectrum index out of bound')
-                continue
+            else:  # if ms3data is not empty
+                try:
+                    # Find the spectrum in the ms3data dictionary that has precursor id equal the ms2 spectrum
+                    for key, value in fraction_mzml.prec_idx.items():
+                        if int(value) == scan:
+                            spectrum = fraction_mzml.ms3data.get(key)
 
-            #except xml.etree.ElementTree.ParseError:
-            #    if args.verbosity == 2:
-            #        print('[verbosity 2] XML eTree does not appear to be able to read this spectrum',
-            #              '(scan number:', str(scan) + ')', sep=' ')
-            #    continue
+                    # Tidy this up
+                    if spectrum is None:
+                        logger.error(f'[error] spectrum index {scan} out of bound or is empty')
+                        raise KeyError
 
-            #assert spectrum['ms level'] > 1, '[error] specified spectrum is a full scan'
+                except KeyError:
+                    logger.error('[error] spectrum index out of bound')
+                    continue
 
-            # For each reporter, check that the spectrum has that peak using pymzml
-            # This returns a (m/z, intensity) tuple
-            # We will append the intensity of each reporter to a list
+
+
 
             # Get the intensity of each reporter
             tmt_intensities = quantify_spec.quantify_reporters(idx=idx,
