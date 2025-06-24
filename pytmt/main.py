@@ -371,6 +371,17 @@ class CheckQValue(argparse.Action):
             raise argparse.ArgumentTypeError("%r for q_value not in range [0.0, 1.0]" % (values,))
         setattr(namespace, self.dest, values)
 
+class CheckPrecision(argparse.Action):
+    """ Class to check that precision is between 0 and 100. """
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            values = int(values)
+        except ValueError:
+            raise argparse.ArgumentTypeError("%r for precision not an integer" % (values,))
+
+        if values < 0 or values > 100:
+            raise argparse.ArgumentTypeError("%r for precision not in range [0, 100]" % (values,))
+        setattr(namespace, self.dest, values)
 
 def main() -> None:
     """
@@ -424,9 +435,10 @@ def main() -> None:
     parser.add_argument('-p', '--precision',
                         help='ms2 spectrum mass shift tolerance in ppm [default: 10]',
                         type=int,
-                        choices=[0, 100],
                         metavar='[0, 100]',
-                        default=10)
+                        default=10,
+                        action=CheckPrecision,
+                        )
 
     parser.add_argument('-o', '--out', help='name of the output directory [default: tmt_out]',
                         default='tmt_out')
